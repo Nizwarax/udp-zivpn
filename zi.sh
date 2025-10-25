@@ -4,6 +4,11 @@
 
 echo -e "Updating server"
 sudo apt-get update && apt-get upgrade -y
+if ! command -v ufw &> /dev/null
+then
+    echo "ufw could not be found, installing it now..."
+    sudo apt-get install ufw -y
+fi
 systemctl stop zivpn.service 1> /dev/null 2> /dev/null
 echo -e "Downloading UDP Service"
 wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn 1> /dev/null 2> /dev/null
