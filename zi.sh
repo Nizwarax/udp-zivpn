@@ -23,8 +23,8 @@ fi
 sudo systemctl stop zivpn.service > /dev/null 2>&1
 
 echo -e "Downloading UDP Service"
-sudo wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn
-sudo chmod +x /usr/local/bin/zivpn
+sudo wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn-bin
+sudo chmod +x /usr/local/bin/zivpn-bin
 sudo mkdir -p /etc/zivpn
 sudo wget https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/config.json -O /etc/zivpn/config.json
 
@@ -42,7 +42,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/etc/zivpn
-ExecStart=/usr/local/bin/zivpn server -c /etc/zivpn/config.json
+ExecStart=/usr/local/bin/zivpn-bin server -c /etc/zivpn/config.json
 Restart=always
 RestartSec=3
 Environment=ZIVPN_LOG_LEVEL=info
@@ -80,8 +80,8 @@ sudo iptables -t nat -A PREROUTING -i $(ip -4 route ls|grep default|grep -Po '(?
 sudo ufw allow 6000:19999/udp > /dev/null
 sudo ufw allow 5667/udp > /dev/null
 
-sudo wget -O /usr/local/bin/zivpn-menu https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
-sudo chmod +x /usr/local/bin/zivpn-menu
+sudo wget -O /usr/local/bin/zivpn https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
+sudo chmod +x /usr/local/bin/zivpn
 
 # Get Public IP
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
@@ -103,7 +103,7 @@ echo -e "${BLUE}\\/___-II_\\/ |-| |-|_\/ \\/${NC}"
 echo ""
 echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
 echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
-echo -e "${WHITE}Run the command 'zivpn-menu' to access the panel.${NC}"
+echo -e "${WHITE}Run the command 'zivpn' to access the panel.${NC}"
 echo -e "${YELLOW}Contact us on Telegram (@deviyke) for support.${NC}"
 echo ""
 
