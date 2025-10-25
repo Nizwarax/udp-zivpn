@@ -14,7 +14,8 @@ NC='\033[0m'
 # Fungsi bantuan untuk menyinkronkan kata sandi dari user.db.json ke config.json
 sync_config() {
     passwords=$(jq -r '.[].password' "$USER_DB")
-    jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    sudo systemctl daemon-reload
     sudo systemctl restart zivpn.service 2>/dev/null
 }
 
