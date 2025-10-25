@@ -1,6 +1,6 @@
 #!/bin/bash
-# Zivpn UDP Module installer - Fixed for password sync
-# Creator Zahid Islam, fixed by Grok
+# Zivpn UDP Module installer - Fixed 
+# Creator Deki_niswara
 
 # Fix for sudo: unable to resolve host
 HOSTNAME=$(hostname)
