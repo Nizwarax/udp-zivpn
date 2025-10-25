@@ -65,22 +65,6 @@ EOF'
 # Buat file database pengguna awal
 sudo bash -c 'echo "[]" > /etc/zivpn/users.db.json'
 
-echo -e "ZIVPN UDP Initial User"
-read -p "Enter username for the first account: " initial_username
-read -p "Enter password for the first account: " initial_password
-read -p "Enter duration (in days) for the first account [Default: 30]: " initial_duration
-initial_duration=${initial_duration:-30}
-
-# Tambahkan pengguna awal ke database
-expiry_date=$(date -d "+$initial_duration days" +%Y-%m-%d)
-first_user=$(jq -n --arg user "$initial_username" --arg pass "$initial_password" --arg expiry "$expiry_date" \
-    '{username: $user, password: $pass, expiry_date: $expiry}')
-sudo bash -c "jq '. += [$first_user]' /etc/zivpn/users.db.json > /etc/zivpn/users.db.json.tmp && mv /etc/zivpn/users.db.json.tmp /etc/zivpn/users.db.json"
-
-# Sinkronkan password ke config.json untuk auth.config DAN config
-passwords=$(sudo jq -r '.[].password' "/etc/zivpn/users.db.json")
-sudo bash -c "jq --argjson passwords '$(echo "$passwords" | jq -R . | jq -s .)' '.auth.config = \$passwords | .config = \$passwords' /etc/zivpn/config.json > /etc/zivpn/config.json.tmp && mv /etc/zivpn/config.json.tmp /etc/zivpn/config.json"
-
 # Bersihin iptables rules yang lama
 INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 while sudo iptables -t nat -D PREROUTING -i $INTERFACE -p udp --dport 6000:19999 -j DNAT --to-destination :5667 2>/dev/null; do :; done
@@ -98,6 +82,11 @@ sudo ufw allow 5667/udp > /dev/null
 
 sudo wget -O /usr/local/bin/zivpn https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
 sudo chmod +x /usr/local/bin/zivpn
+
+# Pasang skrip pembersihan otomatis dan jadwalkan
+sudo wget -O /usr/local/bin/zivpn-cleanup.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-cleanup.sh
+sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
+sudo bash -c 'echo "0 2 * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.d/zivpn-cleanup'
 
 # Get Public IP
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
