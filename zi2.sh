@@ -4,6 +4,16 @@
 
 echo -e "Updating server"
 sudo apt-get update && apt-get upgrade -y
+if ! command -v ufw &> /dev/null
+then
+    echo "ufw could not be found, installing it now..."
+    sudo apt-get install ufw -y
+fi
+if ! command -v jq &> /dev/null
+then
+    echo "jq could not be found, installing it now..."
+    sudo apt-get install jq -y
+fi
 systemctl stop zivpn.service 1> /dev/null 2> /dev/null
 echo -e "Downloading UDP Service"
 wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-arm64 -O /usr/local/bin/zivpn 1> /dev/null 2> /dev/null
@@ -57,5 +67,10 @@ systemctl start zivpn.service
 iptables -t nat -A PREROUTING -i $(ip -4 route ls|grep default|grep -Po '(?<=dev )(\S+)'|head -1) -p udp --dport 6000:19999 -j DNAT --to-destination :5667
 ufw allow 6000:19999/udp
 ufw allow 5667/udp
+
+cp zivpn-menu.sh /usr/local/bin/zivpn-menu
+chmod +x /usr/local/bin/zivpn-menu
+
 rm zi2.* 1> /dev/null 2> /dev/null
 echo -e "ZIVPN Installed"
+echo -e "Run 'zivpn-menu' to access the management panel."
