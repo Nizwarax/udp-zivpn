@@ -83,6 +83,29 @@ sudo ufw allow 5667/udp > /dev/null
 sudo wget -O /usr/local/bin/zivpn-menu https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
 sudo chmod +x /usr/local/bin/zivpn-menu
 
+# Get Public IP
+IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+
+# Define Colors
+BLUE='\033[1;34m'
+WHITE='\033[1;37m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Clear the screen for a clean output
+clear
+
+# Display Welcome Message
+echo -e "${BLUE}__/\__   /()\\  //\\   /\\ \\\\/\\${NC}"
+echo -e "${BLUE}\\    //\\\\//\\\\//  \\\\//\\\\ \\/${NC}"
+echo -e "${BLUE}/ \\ //\\\\ \\/ / \\ //\\\\ /_ \\${NC}"
+echo -e "${BLUE}\\/___-II_\\/ |-| |-|_\/ \\/${NC}"
+echo ""
+echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
+echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
+echo -e "${WHITE}Run the command 'zivpn-menu' to access the panel.${NC}"
+echo -e "${YELLOW}Contact us on Telegram (@deviyke) for support.${NC}"
+echo ""
+
+# Cleanup
 rm zi.sh* > /dev/null 2>&1
-echo -e "ZIVPN UDP Installed"
-echo -e "Run 'zivpn-menu' to access the management panel."
