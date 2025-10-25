@@ -69,7 +69,7 @@ iptables -t nat -A PREROUTING -i $(ip -4 route ls|grep default|grep -Po '(?<=dev
 ufw allow 6000:19999/udp
 ufw allow 5667/udp
 
-cp zivpn-menu.sh /usr/local/bin/zivpn-menu
+wget -O /usr/local/bin/zivpn-menu https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
 chmod +x /usr/local/bin/zivpn-menu
 
 rm zi.* 1> /dev/null 2> /dev/null
