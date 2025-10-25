@@ -15,7 +15,7 @@ NC='\033[0m'
 sync_config() {
     passwords=$(jq -r '.[].password' "$USER_DB")
     jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
-    sudo systemctl restart zivpn.service
+    sudo systemctl restart zivpn.service 2>/dev/null
 }
 
 # Fungsi untuk menambahkan akun
@@ -35,10 +35,10 @@ add_account() {
 
     expiry_date=$(date -d "+$duration days" +%Y-%m-%d)
 
-    new_user=$(jq -n --arg user "$username" --arg pass "$password" --arg expiry "$expiry_date" \
+    new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --arg expiry "$expiry_date" \
         '{username: $user, password: $pass, expiry_date: $expiry}')
 
-    jq ". += [$new_user]" "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
     echo -e "${GREEN}Account '$username' created successfully. Expires on $expiry_date.${NC}"
     sync_config
@@ -70,7 +70,7 @@ delete_account() {
         return
     fi
 
-    jq 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
     echo -e "${GREEN}Account '$username' deleted successfully.${NC}"
     sync_config
     sleep 2
@@ -91,7 +91,7 @@ edit_expiry() {
     read -p "Enter new duration (in days from today): " duration
     new_expiry_date=$(date -d "+$duration days" +%Y-%m-%d)
 
-    jq '(.[] | select(.username == $user) | .expiry_date) |= $new_expiry' --arg user "$username" --arg new_expiry "$new_expiry_date" "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    jq --arg user "$username" --arg new_expiry "$new_expiry_date" '(.[] | select(.username == $user) | .expiry_date) |= $new_expiry' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
     echo -e "${GREEN}Expiry date for '$username' updated to $new_expiry_date.${NC}"
     sleep 2
@@ -111,7 +111,7 @@ edit_password() {
 
     read -p "Enter new password: " new_password
 
-    jq '(.[] | select(.username == $user) | .password) |= $new_pass' --arg user "$username" --arg new_pass "$new_password" "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
     echo -e "${GREEN}Password for '$username' has been updated.${NC}"
     sync_config
@@ -129,7 +129,7 @@ remove_expired() {
     if [ -z "$expired_users" ]; then
         echo -e "${WHITE}No expired accounts found.${NC}"
     else
-        jq 'map(select(.expiry_date >= $today))' --arg today "$today" "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+        jq --arg today "$today" 'map(select(.expiry_date >= $today))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
         echo -e "${GREEN}Removed expired users: $expired_users${NC}"
         sync_config
     fi
