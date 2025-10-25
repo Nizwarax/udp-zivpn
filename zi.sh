@@ -104,7 +104,7 @@ echo ""
 echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
 echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
 echo -e "${WHITE}Run the command 'zivpn' to access the panel.${NC}"
-echo -e "${YELLOW}Contact us on Telegram (@deviyke) for support.${NC}"
+echo -e "${YELLOW}Contact us on Telegram (@Deki_niswara) for support.${NC}"
 echo ""
 
 # Cleanup
