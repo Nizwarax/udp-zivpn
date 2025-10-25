@@ -202,7 +202,7 @@ show_menu() {
     echo "=========================================="
     echo "||          ACCOUNT MANAGEMENT PANEL </>         ||"
     echo "=========================================="
-    IP_ADDRESS=$(hostname -I | awk '{print $1}')
+    IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     echo "🌍 Public IP Address: < $IP_ADDRESS >"
     echo "<<< === === === === === === === >>>"
     echo "[1] 📖 Add Account"
