@@ -16,7 +16,7 @@ sync_config() {
     passwords=$(jq -r '.[].password' "$USER_DB")
     jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
     sudo systemctl daemon-reload
-    sudo systemctl restart zivpn.service 2>/dev/null
+    sudo systemctl restart zivpn.service > /dev/null 2>&1
 }
 
 # Fungsi untuk menambahkan akun
