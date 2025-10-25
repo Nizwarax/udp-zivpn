@@ -46,21 +46,24 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF
 
-echo -e "ZIVPN UDP Passwords"
-read -p "Enter passwords separated by commas, example: pass1,pass2 (Press enter for Default 'zi'): " input_config
+# Buat file database pengguna awal
+echo "[]" > /etc/zivpn/users.db.json
 
-if [ -n "$input_config" ]; then
-    IFS=',' read -r -a config <<< "$input_config"
-    if [ ${#config[@]} -eq 1 ]; then
-        config+=(${config[0]})
-    fi
-else
-    config=("zi")
-fi
+echo -e "ZIVPN UDP Initial User"
+read -p "Enter username for the first account: " initial_username
+read -p "Enter password for the first account: " initial_password
+read -p "Enter duration (in days) for the first account [Default: 30]: " initial_duration
+initial_duration=${initial_duration:-30}
 
-new_config_str="\"config\": [$(printf "\"%s\"," "${config[@]}" | sed 's/,$//')]"
+# Tambahkan pengguna awal ke database
+expiry_date=$(date -d "+$initial_duration days" +%Y-%m-%d)
+first_user=$(jq -n --arg user "$initial_username" --arg pass "$initial_password" --arg expiry "$expiry_date" \
+    '{username: $user, password: $pass, expiry_date: $expiry}')
+jq ". += [$first_user]" /etc/zivpn/users.db.json > /etc/zivpn/users.db.json.tmp && mv /etc/zivpn/users.db.json.tmp /etc/zivpn/users.db.json
 
-sed -i -E "s/\"config\": ?\[[[:space:]]*\"zi\"[[:space:]]*\]/${new_config_str}/g" /etc/zivpn/config.json
+# Sinkronkan config.json dengan pengguna awal
+passwords=$(jq -r '.[].password' "/etc/zivpn/users.db.json")
+jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.config = $passwords' /etc/zivpn/config.json > /etc/zivpn/config.json.tmp && mv /etc/zivpn/config.json.tmp /etc/zivpn/config.json
 
 
 systemctl enable zivpn.service
