@@ -1,6 +1,6 @@
 #!/bin/bash
-# Zivpn UDP Module installer - ARM
-# Creator Zahid Islam
+# Zivpn UDP Module installer - Fixed for x86_64 and password sync
+# Creator Deki_niswara
 
 echo -e "Updating server"
 sudo apt-get update && sudo apt-get upgrade -y
@@ -20,10 +20,11 @@ then
     sudo apt-get install curl -y
 fi
 
+# Stop service kalau ada
 sudo systemctl stop zivpn.service > /dev/null 2>&1
 
 echo -e "Downloading UDP Service"
-sudo wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-arm64 -O /usr/local/bin/zivpn-bin
+sudo wget https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn-bin
 sudo chmod +x /usr/local/bin/zivpn-bin
 sudo mkdir -p /etc/zivpn
 sudo wget https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/config.json -O /etc/zivpn/config.json
@@ -69,14 +70,22 @@ first_user=$(jq -n --arg user "$initial_username" --arg pass "$initial_password"
     '{username: $user, password: $pass, expiry_date: $expiry}')
 sudo bash -c "jq '. += [$first_user]' /etc/zivpn/users.db.json > /etc/zivpn/users.db.json.tmp && mv /etc/zivpn/users.db.json.tmp /etc/zivpn/users.db.json"
 
-# Sinkronkan config.json dengan pengguna awal
+# Sinkronkan password ke auth.config DAN config di config.json
 passwords=$(sudo jq -r '.[].password' "/etc/zivpn/users.db.json")
-sudo bash -c "jq --argjson passwords '$(echo "$passwords" | jq -R . | jq -s .)' '.config = \$passwords' /etc/zivpn/config.json > /etc/zivpn/config.json.tmp && mv /etc/zivpn/config.json.tmp /etc/zivpn/config.json"
+sudo bash -c "jq --argjson passwords '$(echo "$passwords" | jq -R . | jq -s .)' '.auth.config = \$passwords | .config = \$passwords' /etc/zivpn/config.json > /etc/zivpn/config.json.tmp && mv /etc/zivpn/config.json.tmp /etc/zivpn/config.json"
+
+# Bersihin iptables rules yang lama
+INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+while sudo iptables -t nat -D PREROUTING -i $INTERFACE -p udp --dport 6000:19999 -j DNAT --to-destination :5667 2>/dev/null; do :; done
+sudo iptables -t nat -A PREROUTING -i $INTERFACE -p udp --dport 6000:19999 -j DNAT --to-destination :5667
+sudo iptables -A FORWARD -p udp -d 127.0.0.1 --dport 5667 -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -s 127.0.0.1/32 -o $INTERFACE -j MASQUERADE
+sudo apt install iptables-persistent -y -qq
+sudo netfilter-persistent save > /dev/null
 
 sudo systemctl daemon-reload
 sudo systemctl enable zivpn.service
 sudo systemctl start zivpn.service
-sudo iptables -t nat -A PREROUTING -i $(ip -4 route ls|grep default|grep -Po '(?<=dev )(\S+)'|head -1) -p udp --dport 6000:19999 -j DNAT --to-destination :5667
 sudo ufw allow 6000:19999/udp > /dev/null
 sudo ufw allow 5667/udp > /dev/null
 
@@ -108,4 +117,4 @@ echo -e "${YELLOW}Contact us on Telegram (@Deki_niswara) for support.${NC}"
 echo ""
 
 # Cleanup
-rm zi2.sh* > /dev/null 2>&1
+rm zi-fixed.sh* > /dev/null 2>&1
