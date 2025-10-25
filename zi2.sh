@@ -2,6 +2,13 @@
 # Zivpn UDP Module installer - Fixed for x86_64 and password sync
 # Creator Deki_niswara
 
+# Fix for sudo: unable to resolve host
+HOSTNAME=$(hostname)
+if ! grep -q "127.0.0.1 $HOSTNAME" /etc/hosts; then
+    echo "Adding $HOSTNAME to /etc/hosts"
+    sudo bash -c "echo '127.0.0.1 $HOSTNAME' >> /etc/hosts"
+fi
+
 echo -e "Updating server"
 sudo apt-get update && sudo apt-get upgrade -y
 if ! command -v ufw &> /dev/null
