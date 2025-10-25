@@ -184,15 +184,26 @@ vps_info() {
     read -p "Press [Enter] to continue..."
 }
 
-# Fungsi untuk panduan uninstall
-uninstall_guide() {
+# Fungsi untuk uninstall interaktif
+interactive_uninstall() {
     clear
-    echo -e "${YELLOW}--- Uninstall Guide ---${NC}"
-    echo -e "${WHITE}To uninstall ZIVPN and the management panel, please run the following command:${NC}"
-    echo ""
-    echo -e "${YELLOW}wget -O uninstall.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/uninstall.sh && chmod +x uninstall.sh && ./uninstall.sh${NC}"
-    echo ""
-    read -p "Press [Enter] to continue..."
+    echo -e "${YELLOW}--- Uninstall ZIVPN ---${NC}"
+    read -p "Anda yakin ingin uninstall ZIVPN? [y/N]: " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${WHITE}Memulai proses uninstall...${NC}"
+        if wget -O uninstall.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/uninstall.sh; then
+            chmod +x uninstall.sh
+            ./uninstall.sh
+            echo -e "${GREEN}Proses uninstall selesai.${NC}"
+            exit 0
+        else
+            echo -e "${RED}Gagal mengunduh skrip uninstall.${NC}"
+            sleep 2
+        fi
+    else
+        echo -e "${GREEN}Proses uninstall dibatalkan.${NC}"
+        sleep 2
+    fi
 }
 
 
@@ -221,7 +232,7 @@ show_menu() {
     echo -e "${WHITE}[7] 🧹 Remove Expired Accounts${NC}"
     echo -e "${WHITE}[8] 🖥️ VPS Info${NC}"
     echo -e "${BLUE}<<< ... ... ... >>>${NC}"
-    echo -e "${WHITE}[9] ❓ Uninstall Guide${NC}"
+    echo -e "${WHITE}[9] ❌ Uninstall ZIVPN${NC}"
     echo -e "${WHITE}[0] 🚪 Exit${NC}"
     echo ""
     echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
@@ -241,7 +252,7 @@ while true; do
         6) edit_password ;;
         7) remove_expired ;;
         8) vps_info ;;
-        9) uninstall_guide ;;
+        9) interactive_uninstall ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Opsi tidak valid, silakan coba lagi.${NC}"
