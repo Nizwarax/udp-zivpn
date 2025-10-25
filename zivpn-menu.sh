@@ -198,11 +198,10 @@ uninstall_guide() {
 # Fungsi untuk menampilkan menu
 show_menu() {
     clear
-    echo -e "${BLUE}    __   ____ ___   _   __   __${NC}"
-    echo -e "${BLUE}    \\ \\ / / _ \\__ \\ / |  \\ \\ / /${NC}"
-    echo -e "${BLUE}     \\ V / | | | ) | |   \\ V /${NC}"
-    echo -e "${BLUE}      | || |_| |/ /| |    | |${NC}"
-    echo -e "${BLUE}      |_| \\___//____|_|    |_|${NC}"
+    echo -e "${BLUE}__/\__   /()\\  //\\   /\\ \\\\/\\${NC}"
+    echo -e "${BLUE}\\    //\\\\//\\\\//  \\\\//\\\\ \\/${NC}"
+    echo -e "${BLUE}/ \\ //\\\\ \\/ / \\ //\\\\ /_ \\${NC}"
+    echo -e "${BLUE}\\/___-II_\\/ |-| |-|_\/ \\/${NC}"
     echo ""
     echo -e "${WHITE}    ZIVPN MANAGER - v1.5 for @lstunnels${NC}"
     echo -e "${WHITE}    by: @deviyke, @Kwadeous & @voltsshx${NC}"
