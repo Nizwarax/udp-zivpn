@@ -169,7 +169,7 @@ vps_info() {
     echo "OS: $(grep PRETTY_NAME /etc/os-release | cut -d'=' -f2 | tr -d '\"')"
     echo "Kernel: $(uname -r)"
     echo "Uptime: $(uptime -p)"
-    echo "Public IP: $(hostname -I | awk '{print $1}')"
+    echo "Public IP: $(curl -s ifconfig.me || hostname -I | awk '{print $1}')"
     echo "CPU: $(lscpu | grep 'Model name' | awk -F: '{print $2}' | sed 's/^[ \t]*//')"
     echo "RAM: $(free -h | grep Mem | awk '{print $2}')"
     echo "Disk: $(df -h / | tail -n 1 | awk '{print $2}')"
