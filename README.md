@@ -34,7 +34,7 @@ Client App available:
 > ZiVPN
                 
 ----
-Bash script by PowerMX
+Bash script by GTN
 =======
 # udp-zivpn
->>>>>>> 65334de4acabcccc27c9a45a9ec87fbd06879fe7
+>>>>>>> fffffffff633fefcffffffffef05ac4a
