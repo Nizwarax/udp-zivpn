@@ -210,12 +210,12 @@ interactive_uninstall() {
 # Fungsi untuk menampilkan menu
 show_menu() {
     clear
-    echo -e "${BLUE}      __________     ______  _   _      ${NC}"
-    echo -e "${BLUE}__/\_|__  /_ _\ \   / /  _ \| \ | |_/\__${NC}"
-    echo -e "${BLUE}\    / / / | | \ \ / /| |_) |  \| \    /${NC}"
-    echo -e "${BLUE}/_  _\/ /_ | |  \ V / |  __/| |\  /_  _\\${NC}"
-    echo -e "${BLUE}  \/ /____|___|  \_/  |_|   |_| \_| \/  ${NC}"
-    echo -e "${BLUE}                                        ${NC}"
+    printf "${BLUE}      __________     ______  _   _      ${NC}\n"
+    printf "${BLUE}__/\\_|__  /_ _\\ \\   / /  _ \\| \\ | |_/\\__${NC}\n"
+    printf "${BLUE}\\\    / / / | | \\ \\ / /| |_) |  \\| \\    /${NC}\n"
+    printf "${BLUE}/_  _\\/ /_ | |  \\ V / |  __/| |\\  /_  _\\\\${NC}\n"
+    printf "${BLUE}  \\/ /____|___|  \\_/  |_|   |_| \\_| \\/  ${NC}\n"
+    printf "${BLUE}                                        ${NC}\n"
     echo -e "${WHITE}    ZIVPN MANAGER - v1.5 for @Deki_niswara${NC}"
     echo -e "${WHITE}    by: Global Tunneling Nusantara${NC}"
     echo -e "${YELLOW}==========================================${NC}"
