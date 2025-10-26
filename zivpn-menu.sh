@@ -219,7 +219,7 @@ show_menu() {
     echo -e "${WHITE}    ZIVPN MANAGER - v1.5 for @Deki_niswara${NC}"
     echo -e "${WHITE}    by: Global Tunneling Nusantara${NC}"
     echo -e "${YELLOW}==========================================${NC}"
-    echo -e "${YELLOW}||${WHITE}    ACCOUNT MANAGEMENT PANEL </>  ${YELLOW}||${NC}"
+    echo -e "${YELLOW}||${WHITE}    ACCOUNT MANAGEMENT PANEL </>      ${YELLOW}||${NC}"
     echo -e "${YELLOW}==========================================${NC}"
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     echo -e "${WHITE}🌍 Public IP Address: < ${YELLOW}$IP_ADDRESS${WHITE} >${NC}"
