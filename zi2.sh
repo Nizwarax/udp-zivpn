@@ -104,7 +104,7 @@ clear
 echo -e "${BLUE}      __________     ______  _   _      ${NC}"
 echo -e "${BLUE}__/\_|__  /_ _\ \   / /  _ \| \ | |_/\__${NC}"
 echo -e "${BLUE}\    / / / | | \ \ / /| |_) |  \| \    /${NC}"
-echo -e "${BLUE}/_  _\/ /_ | |  \ V / |  __/| |\  /_  _\${NC}"
+echo -e "${BLUE}/_  _\/ /_ | |  \ V / |  __/| |\  /_  _\\${NC}"
 echo -e "${BLUE}  \/ /____|___|  \_/  |_|   |_| \_| \/  ${NC}"
 echo -e "${BLUE}                                        ${NC}"
 echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
