@@ -101,11 +101,12 @@ NC='\033[0m'
 clear
 
 # Display Welcome Message
-echo -e "${BLUE}__/\__   /()\\  //\\   /\\ \\\\/\\${NC}"
-echo -e "${BLUE}\\    //\\\\//\\\\//  \\\\//\\\\ \\/${NC}"
-echo -e "${BLUE}/ \\ //\\\\ \\/ / \\ //\\\\ /_ \\${NC}"
-echo -e "${BLUE}\\/___-II_\\/ |-| |-|_\/ \\/${NC}"
-echo ""
+echo -e "${BLUE}      __________     ______  _   _      ${NC}"
+echo -e "${BLUE}__/\_|__  /_ _\ \   / /  _ \| \ | |_/\__${NC}"
+echo -e "${BLUE}\    / / / | | \ \ / /| |_) |  \| \    /${NC}"
+echo -e "${BLUE}/_  _\/ /_ | |  \ V / |  __/| |\  /_  _\${NC}"
+echo -e "${BLUE}  \/ /____|___|  \_/  |_|   |_| \_| \/  ${NC}"
+echo -e "${BLUE}                                        ${NC}"
 echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
 echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
 echo -e "${WHITE}Run the command 'zivpn' to access the panel.${NC}"
