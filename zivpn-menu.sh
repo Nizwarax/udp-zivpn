@@ -11,14 +11,68 @@ GREEN='\033[1;32m'
 RED='\033[1;31m'
 NC='\033[0m'
 
-# Check for lolcat
-if command -v lolcat &> /dev/null; then
-    LOLCAT="lolcat"
-else
-    LOLCAT="cat"
-fi
+# --- Theme Configuration ---
+THEME_CONFIG="/etc/zivpn/theme.conf"
+THEME_CMD="cat" # Default value
 
-# --- Functions from original script that were removed ---
+# Function to load the theme
+load_theme() {
+    if [ -f "$THEME_CONFIG" ] && [ -s "$THEME_CONFIG" ]; then
+        THEME=$(cat "$THEME_CONFIG")
+        case $THEME in
+            rainbow)
+                if command -v lolcat &> /dev/null; then
+                    THEME_CMD="lolcat"
+                else
+                    THEME_CMD="cat" # Fallback if lolcat is not installed
+                fi
+                ;;
+            red) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $RED)/\" -e \"s/$/$(echo -e $NC)/\"";;
+            green) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $GREEN)/\" -e \"s/$/$(echo -e $NC)/\"";;
+            yellow) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $YELLOW)/\" -e \"s/$/$(echo -e $NC)/\"";;
+            blue) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $BLUE)/\" -e \"s/$/$(echo -e $NC)/\"";;
+            none) THEME_CMD="cat";;
+            *) THEME_CMD="cat";; # Default to no color if invalid value
+        esac
+    elif command -v lolcat &> /dev/null; then
+        # If no config, default to lolcat if available
+        THEME_CMD="lolcat"
+        echo "rainbow" > "$THEME_CONFIG" # Create the file with default
+    fi
+}
+
+# Load the theme at the start of the script
+load_theme
+
+# --- Theme Configuration Menu ---
+configure_theme() {
+    clear
+    echo -e "${YELLOW}--- Pengaturan Tampilan Tema ---${NC}"
+    echo -e "${WHITE}Pilih gaya warna untuk tampilan menu:${NC}"
+    echo ""
+    printf "[%2d] 🌈 Pelangi (lolcat)\n" 1
+    printf "[%2d] ❤️ Merah\n" 2
+    printf "[%2d] 💚 Hijau\n" 3
+    printf "[%2d] 💛 Kuning\n" 4
+    printf "[%2d] 💙 Biru\n" 5
+    printf "[%2d]  plain Tanpa Warna\n" 6
+    echo ""
+    read -p "Pilih opsi: " choice
+
+    case $choice in
+        1) echo "rainbow" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Pelangi.${NC}" ;;
+        2) echo "red" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Merah.${NC}" ;;
+        3) echo "green" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Hijau.${NC}" ;;
+        4) echo "yellow" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Kuning.${NC}" ;;
+        5) echo "blue" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Biru.${NC}" ;;
+        6) echo "none" > "$THEME_CONFIG" && echo -e "${GREEN}Warna tema dinonaktifkan.${NC}" ;;
+        *) echo -e "${RED}Pilihan tidak valid.${NC}" ;;
+    esac
+
+    # Reload the theme immediately
+    load_theme
+    sleep 2
+}
 
 # Fungsi untuk mencadangkan dan memulihkan
 backup_restore() {
@@ -69,7 +123,7 @@ vps_info() {
         echo -e "${WHITE}CPU: $(lscpu | grep 'Model name' | awk -F: '{print $2}' | sed 's/^[ \t]*//')${NC}"
         echo -e "${WHITE}RAM: $(free -h | grep Mem | awk '{print $2}')${NC}"
         echo -e "${WHITE}Disk: $(df -h / | tail -n 1 | awk '{print $2}')${NC}"
-    ) | $LOLCAT
+    ) | eval "$THEME_CMD"
     read -p "Press [Enter] to continue..."
 }
 
@@ -237,7 +291,7 @@ add_account() {
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
-    ) | $LOLCAT
+    ) | eval "$THEME_CMD"
 
     # Format untuk Telegram (menggunakan tag HTML untuk tebal)
     message="────────────────────%0A"
@@ -297,7 +351,7 @@ add_trial_account() {
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
-    ) | $LOLCAT
+    ) | eval "$THEME_CMD"
 
     # Format untuk Telegram
     message="────────────────────%0A"
@@ -354,7 +408,7 @@ list_accounts() {
         done
 
         echo -e "${BLUE}-------------------------------------------------------------------${NC}"
-    ) | $LOLCAT
+    ) | eval "$THEME_CMD"
     read -p "Press [Enter] to continue..."
 }
 
@@ -484,11 +538,12 @@ show_menu() {
     echo "<<< ... ... ... >>>"
     printf "[%2d] 💾  Full Backup/Restore\n" 8
     printf "[%2d] 🤖  Atur Notifikasi Bot\n" 9
-    printf "[%2d] 🛡️  Pengaturan Cadangan Otomatis\n" 10
-    printf "[%2d] ❌  Uninstall ZIVPN\n" 11
+    printf "[%2d] 🎨  Pengaturan Tema\n" 10
+    printf "[%2d] 🛡️  Pengaturan Cadangan Otomatis\n" 11
+    printf "[%2d] ❌  Uninstall ZIVPN\n" 12
     printf "[%2d] 🚪  Exit\n" 0
     echo ""
-    ) | $LOLCAT
+    ) | eval "$THEME_CMD"
     echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
 }
 
@@ -507,8 +562,9 @@ while true; do
         7) vps_info ;;
         8) backup_restore ;;
         9) configure_bot_settings ;;
-        10) manage_auto_backup ;;
-        11) interactive_uninstall ;;
+        10) configure_theme ;;
+        11) manage_auto_backup ;;
+        12) interactive_uninstall ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
