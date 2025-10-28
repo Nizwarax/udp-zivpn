@@ -63,16 +63,24 @@ vps_info() {
 interactive_uninstall() {
     clear
     echo -e "${YELLOW}--- Uninstall ZIVPN ---${NC}"
+
+    # Periksa apakah skrip uninstall ada di lokasi yang diharapkan
+    UNINSTALL_SCRIPT="/usr/local/bin/uninstall.sh"
+    if [ ! -f "$UNINSTALL_SCRIPT" ]; then
+        echo -e "${RED}Gagal menemukan skrip uninstall di $UNINSTALL_SCRIPT.${NC}"
+        echo -e "${WHITE}Pastikan Zivpn diinstal dengan benar.${NC}"
+        sleep 3
+        return
+    fi
+
     read -p "Anda yakin ingin uninstall ZIVPN? [y/N]: " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${WHITE}Memulai proses uninstall...${NC}"
-        # Assuming uninstall.sh is in the same directory or PATH
-        if [ -f "uninstall.sh" ]; then
-             bash uninstall.sh
-        else
-            echo -e "${RED}Gagal menemukan skrip uninstall.${NC}"
-            sleep 2
-        fi
+        # Jalankan skrip dari path absolutnya
+        sudo bash "$UNINSTALL_SCRIPT"
+        # Jika uninstall berhasil, keluar dari menu karena layanan sudah tidak ada
+        echo -e "${GREEN}Kembali ke terminal...${NC}"
+        exit 0
     else
         echo -e "${GREEN}Proses uninstall dibatalkan.${NC}"
         sleep 2
@@ -168,22 +176,24 @@ list_accounts() {
     jq -r --argjson now "$(date +%s)" '
         .[] |
         . as $user |
-        ($user.expiry_timestamp // ($user.expiry_date | fromdate)) as $expiry_ts |
-        ($expiry_ts - $now) as $remaining_seconds |
-        if $remaining_seconds <= 0 then
-            "\u001b[1;31mKedaluwarsa\u001b[0m"
-        else
-            ($remaining_seconds / 86400 | floor) as $days |
-            (($remaining_seconds % 86400) / 3600 | floor) as $hours |
-            (($remaining_seconds % 3600) / 60 | floor) as $minutes |
-            if $days > 0 then
-                "\u001b[1;32mSisa \($days) hari, \($hours) jam\u001b[0m"
-            elif $hours > 0 then
-                "\u001b[1;33mSisa \($hours) jam, \($minutes) mnt\u001b[0m"
+        (
+            ($user.expiry_timestamp // ($user.expiry_date | fromdate)) as $expiry_ts |
+            ($expiry_ts - $now) as $remaining_seconds |
+            if $remaining_seconds <= 0 then
+                "\u001b[1;31mKedaluwarsa\u001b[0m"
             else
-                "\u001b[1;33mSisa \($minutes) menit\u001b[0m"
+                ($remaining_seconds / 86400 | floor) as $days |
+                (($remaining_seconds % 86400) / 3600 | floor) as $hours |
+                (($remaining_seconds % 3600) / 60 | floor) as $minutes |
+                if $days > 0 then
+                    "\u001b[1;32mSisa \($days) hari, \($hours) jam\u001b[0m"
+                elif $hours > 0 then
+                    "\u001b[1;33mSisa \($hours) jam, \($minutes) mnt\u001b[0m"
+                else
+                    "\u001b[1;33mSisa \($minutes) menit\u001b[0m"
+                end
             end
-        end as $status |
+        ) as $status |
         [$user.username, $user.password, $status] |
         @tsv' "$USER_DB" |
     while IFS=$'\t' read -r user pass status; do
