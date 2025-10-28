@@ -33,6 +33,12 @@ backup_restore() {
             backup_file="/root/zivpn_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
             tar -czf "$backup_file" -C /etc/zivpn .
             echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
+
+            # Kirim cadangan ke Telegram jika bot dikonfigurasi
+            echo -e "${WHITE}Mengirim file cadangan ke Telegram...${NC}"
+            caption="Zivpn Backup - $(date +'%Y-%m-%d %H:%M:%S')"
+            send_document "$backup_file" "$caption"
+            echo -e "${GREEN}File cadangan berhasil dikirim ke Telegram.${NC}"
             ;;
         2)
             read -p "Enter the full path to the backup file: " backup_file
@@ -155,6 +161,29 @@ send_notification() {
          -d "chat_id=${CHAT_ID}" \
          -d "text=${message}" \
          -d "parse_mode=HTML" > /dev/null
+}
+
+# Fungsi untuk mengirim dokumen ke Telegram
+send_document() {
+    local file_path="$1"
+    local caption="$2"
+    BOT_CONFIG="/etc/zivpn/bot_config.sh"
+
+    if [ -f "$BOT_CONFIG" ]; then
+        source "$BOT_CONFIG"
+    else
+        return
+    fi
+
+    if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+        return
+    fi
+
+    # Kirim dokumen menggunakan curl dalam mode senyap
+    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+         -F "chat_id=${CHAT_ID}" \
+         -F "document=@${file_path}" \
+         -F "caption=${caption}" > /dev/null
 }
 
 
@@ -393,30 +422,72 @@ edit_password() {
     sleep 2
 }
 
+# Fungsi untuk mengelola cron job cadangan otomatis
+manage_auto_backup() {
+    CRON_FILE="/etc/cron.d/zivpn-autobackup"
+    clear
+    echo -e "${YELLOW}--- Pengaturan Cadangan Otomatis ---${NC}"
+
+    # Periksa status saat ini
+    if [ -f "$CRON_FILE" ]; then
+        echo -e "${GREEN}Status: Cadangan Otomatis AKTIF${NC}"
+        echo -e "${WHITE}Cadangan dijadwalkan setiap hari pada pukul 00:00.${NC}"
+        echo ""
+        echo -e "${WHITE}1. Nonaktifkan Cadangan Otomatis${NC}"
+        echo -e "${WHITE}2. Kembali ke Menu Utama${NC}"
+        read -p "Pilih opsi: " choice
+        case $choice in
+            1)
+                sudo rm "$CRON_FILE"
+                echo -e "${GREEN}Cadangan otomatis telah dinonaktifkan.${NC}"
+                sleep 2
+                ;;
+            *)
+                ;;
+        esac
+    else
+        echo -e "${RED}Status: Cadangan Otomatis NONAKTIF${NC}"
+        echo ""
+        echo -e "${WHITE}1. Aktifkan Cadangan Otomatis (Setiap hari jam 00:00)${NC}"
+        echo -e "${WHITE}2. Kembali ke Menu Utama${NC}"
+        read -p "Pilih opsi: " choice
+        case $choice in
+            1)
+                # Tulis cron job ke file dengan sudo
+                sudo bash -c 'echo "0 0 * * * root /usr/local/bin/zivpn-autobackup.sh" > /etc/cron.d/zivpn-autobackup'
+                echo -e "${GREEN}Cadangan otomatis telah diaktifkan.${NC}"
+                sleep 2
+                ;;
+            *)
+                ;;
+        esac
+    fi
+}
+
 # --- Tampilan Menu Utama ---
 show_menu() {
     clear
     (
     figlet -f standard "ZIVPN"
-    echo -e "${WHITE}    ZIVPN MANAGER - v2.0 (Advanced)${NC}"
-    echo -e "${YELLOW}==========================================${NC}"
+    echo "    ZIVPN MANAGER - v2.0 (Advanced)"
+    echo "=========================================="
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
-    echo -e "${WHITE}🌍 Public IP Address: < ${YELLOW}$IP_ADDRESS${WHITE} >${NC}"
-    echo -e "${BLUE}<<< === === === === === === === >>>${NC}"
-    # Menggunakan printf untuk output yang bersih dan membiarkan lolcat menangani warna
-    # Spasi ditambahkan sebelum angka satu digit agar sejajar dengan '10'
-    printf " [ 1] ➕  Add Regular Account\n"
-    printf " [ 2] ⏳  Add Trial Account\n"
-    printf " [ 3] 📄  List Accounts\n"
-    printf " [ 4] 🗑️  Delete Account\n"
-    printf " [ 5] 📅  Edit Expiry Date\n"
-    printf " [ 6] 🔑  Edit Password\n"
-    printf " [ 7] 🔄  Full Backup/Restore\n"
-    printf " [ 8] 🖥️  VPS Info\n"
-    echo -e "${BLUE}<<< ... ... ... >>>${NC}"
-    printf " [ 9] ⚙️  Atur Notifikasi Bot\n"
-    printf "[10] ❌  Uninstall ZIVPN\n"
-    printf " [ 0] 🚪  Exit\n"
+    echo "🌍 Public IP Address: < $IP_ADDRESS >"
+    echo "<<< === === === === === === === >>>"
+    # Menggunakan format printf untuk perataan yang konsisten
+    printf "[%2d] ➕  Add Regular Account\n" 1
+    printf "[%2d] ⏳  Add Trial Account\n" 2
+    printf "[%2d] 📄  List Accounts\n" 3
+    printf "[%2d] 🗑️  Delete Account\n" 4
+    printf "[%2d] 📅  Edit Expiry Date\n" 5
+    printf "[%2d] 🔑  Edit Password\n" 6
+    printf "[%2d] 🖥️  VPS Info\n" 7
+    echo "<<< ... ... ... >>>"
+    printf "[%2d] 💾  Full Backup/Restore\n" 8
+    printf "[%2d] 🤖  Atur Notifikasi Bot\n" 9
+    printf "[%2d] 🛡️  Pengaturan Cadangan Otomatis\n" 10
+    printf "[%2d] ❌  Uninstall ZIVPN\n" 11
+    printf "[%2d] 🚪  Exit\n" 0
     echo ""
     ) | $LOLCAT
     echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
@@ -434,10 +505,11 @@ while true; do
         4) delete_account ;;
         5) edit_expiry ;;
         6) edit_password ;;
-        7) backup_restore ;;
-        8) vps_info ;;
+        7) vps_info ;;
+        8) backup_restore ;;
         9) configure_bot_settings ;;
-        10) interactive_uninstall ;;
+        10) manage_auto_backup ;;
+        11) interactive_uninstall ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
