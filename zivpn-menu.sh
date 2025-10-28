@@ -30,7 +30,7 @@ backup_restore() {
 
     case $choice in
         1)
-            backup_file="/root/zivpn_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+            backup_file="/root/zivpn_backup_$(date +%Y-%m-%d).tar.gz"
             tar -czf "$backup_file" -C /etc/zivpn .
             echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
 
