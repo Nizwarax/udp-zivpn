@@ -14,8 +14,11 @@ warn() { echo -e "${C_YELLOW}⚠️ WARNING:${C_RESET} $1"; }
 error() { echo -e "${C_RED}❌ ERROR:${C_RESET} $1"; exit 1; }
 press_enter() { read -rp "Tekan Enter untuk melanjutkan..."; }
 
-# --- Variabel Skrip ---
-VLESS_SCRIPT_PATH="./vless-manager.sh"
+# --- Variabel Skrip & Deteksi Path ---
+# Menentukan direktori tempat skrip ini berada, untuk path yang andal
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+VLESS_SCRIPT_PATH="$SCRIPT_DIR/vless-manager.sh"
 ZIVPN_COMMAND="zivpn"
 
 # --- Fungsi Manajemen Layanan ---
@@ -39,10 +42,11 @@ handle_zivpn_management() {
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             ARCH=$(uname -m)
             INSTALL_SCRIPT=""
-            if [[ "$ARCH" == "x86_64" ]]; INSTALL_SCRIPT="./zi.sh"; fi
-            if [[ "$ARCH" == "aarch64" ]]; INSTALL_SCRIPT="./zi2.sh"; fi
-
-            if [[ -z "$INSTALL_SCRIPT" ]]; then
+            if [[ "$ARCH" == "x86_64" ]]; then
+                INSTALL_SCRIPT="$SCRIPT_DIR/zi.sh"
+            elif [[ "$ARCH" == "aarch64" ]]; then
+                INSTALL_SCRIPT="$SCRIPT_DIR/zi2.sh"
+            else
                 error "Arsitektur '$ARCH' tidak didukung."
             fi
 
