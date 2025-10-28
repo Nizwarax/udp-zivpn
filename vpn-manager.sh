@@ -1,4 +1,4 @@
-#!/usr//bin/env bash
+#!/usr/bin/env bash
 # vpn-manager.sh - Menu utama terpadu untuk VLESS dan Zivpn
 
 # --- Warna dan Gaya ---

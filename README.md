@@ -2,6 +2,18 @@
 
 Selamat datang di Manajer VPN Terpadu, sebuah koleksi skrip yang dirancang untuk menyederhanakan instalasi dan manajemen layanan VLESS dan Zivpn di server Anda. Lupakan perintah yang rumit dan manajemen manual—semua yang Anda butuhkan kini terpusat dalam satu antarmuka yang mudah digunakan.
 
+## 🚀 Instalasi Cepat
+
+Cukup jalankan perintah di bawah ini untuk menginstal manajer VPN secara otomatis:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/installer.sh)
+```
+
+Setelah selesai, menu akan otomatis muncul. Untuk menjalankannya lagi di masa mendatang, cukup gunakan perintah `sudo vpn`.
+
+---
+
 ![](https://github.com/powermx/dl/blob/master/zivpn.png)
 
 ## ✨ Fitur Utama
