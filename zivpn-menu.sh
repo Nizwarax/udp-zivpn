@@ -397,12 +397,7 @@ edit_password() {
 show_menu() {
     clear
     (
-    printf "${BLUE}      __________     ______  _   _      ${NC}\n"
-    printf "${BLUE}__/\\_|__  /_ _\\ \\   / /  _ \\| \\ | |_/\\__${NC}\n"
-    printf "${BLUE}\\\    / / / | | \\ \\ / /| |_) |  \\| \\    /${NC}\n"
-    printf "${BLUE}/_  _\\/ /_ | |  \\ V / |  __/| |\\  /_  _\\\\${NC}\n"
-    printf "${BLUE}  \\/ /____|___|  \\_/  |_|   |_| \\_| \\/  ${NC}\n"
-    printf "${BLUE}                                        ${NC}\n"
+    figlet -f standard "ZIVPN"
     echo -e "${WHITE}    ZIVPN MANAGER - v2.0 (Advanced)${NC}"
     echo -e "${YELLOW}==========================================${NC}"
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
