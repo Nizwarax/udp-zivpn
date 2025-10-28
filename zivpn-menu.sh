@@ -36,7 +36,7 @@ backup_restore() {
             echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
 
             echo -e "${WHITE}Uploading backup to file hosting service...${NC}"
-            upload_link=$(curl -s --upload-file "$backup_file" "https://transfer.sh/$(basename "$backup_file")")
+            upload_link=$(curl -s --max-time 60 --upload-file "$backup_file" "https://transfer.sh/$(basename "$backup_file")")
 
             if [ -n "$upload_link" ]; then
                 echo -e "${GREEN}Upload successful! Link: $upload_link${NC}"
