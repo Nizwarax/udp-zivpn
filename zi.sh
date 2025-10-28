@@ -118,13 +118,10 @@ NC='\033[0m'
 clear
 
 # Display Welcome Message
-printf "${BLUE}      __________     ______  _   _      ${NC}\n"
-printf "${BLUE}__/\\_|__  /_ _\\ \\   / /  _ \\| \\ | |_/\\__${NC}\n"
-printf "${BLUE}\\\    / / / | | \\ \\ / /| |_) |  \\| \\    /${NC}\n"
-printf "${BLUE}/_  _\\/ /_ | |  \\ V / |  __/| |\\  /_  _\\\\${NC}\n"
-printf "${BLUE}  \\/ /____|___|  \\_/  |_|   |_| \\_| \\/  ${NC}\n"
-printf "${BLUE}                                        ${NC}\n"
-echo -e "${WHITE}ZIVPN MANAGER - v1.5${NC}"
+figlet -f standard "ZIVPN" | lolcat
+echo -e "============================================" | lolcat
+echo -e "            ZIVPN MANAGER - v1.5            " | lolcat
+echo -e "============================================" | lolcat
 echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
 echo -e "${WHITE}Run the command 'zivpn' to access the panel.${NC}"
 echo -e "${YELLOW}Contact us on Telegram (@Deki_niswara) for support.${NC}"
