@@ -25,7 +25,8 @@ backup_restore() {
     clear
     echo -e "${YELLOW}--- Full Backup/Restore ---${NC}"
     echo -e "${WHITE}1. Create Backup${NC}"
-    echo -e "${WHITE}2. Restore from Backup${NC}"
+    echo -e "${WHITE}2. Restore from Local File${NC}"
+    echo -e "${WHITE}3. Restore from Link${NC}"
     read -p "Choose an option: " choice
 
     case $choice in
@@ -34,11 +35,42 @@ backup_restore() {
             tar -czf "$backup_file" -C /etc/zivpn .
             echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
 
-            # Kirim cadangan ke Telegram jika bot dikonfigurasi
-            echo -e "${WHITE}Mengirim file cadangan ke Telegram...${NC}"
-            caption="Zivpn Backup - $(date +'%Y-%m-%d %H:%M:%S')"
-            send_document "$backup_file" "$caption"
-            echo -e "${GREEN}File cadangan berhasil dikirim ke Telegram.${NC}"
+            echo -e "${WHITE}Uploading backup to file hosting service...${NC}"
+            upload_link=$(curl -s --upload-file "$backup_file" "https://transfer.sh/$(basename "$backup_file")")
+
+            if [ -n "$upload_link" ]; then
+                echo -e "${GREEN}Upload successful! Link: $upload_link${NC}"
+
+                # Kumpulkan info untuk pesan notifikasi
+                DATE_BACKUP=$(date '+%Y-%m-%d')
+                TIME_BACKUP=$(date '+%H:%M:%S')
+                DOMAIN=$(hostname)
+                IP_VPS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+
+                # Buat pesan yang diformat
+                message="<b>Thank You For Using Our Service</b>%0A"
+                message+="━━━━━━━━━━━━━━━━━━━%0A"
+                message+="Date Backup : <code>${DATE_BACKUP}</code>%0A"
+                message+="Time Backup : <code>${TIME_BACKUP}</code>%0A"
+                message+="━━━━━━━━━━━━━━━━━━━%0A"
+                message+="Your Domain : <code>${DOMAIN}</code>%0A"
+                message+="Your IP VPS  : <code>${IP_VPS}</code>%0A"
+                message+="━━━━━━━━━━━━━━━━━━━%0A"
+                message+="<b>Link v3 (Temp)</b>%0A"
+                message+="Link Restore: <code>${upload_link}</code>%0A"
+                message+="Max Use/Download: Unlimited%0A"
+                message+="Expired: 14 Days%0A"
+                message+="━━━━━━━━━━━━━━━━━━━%0A"
+                message+="Join: t.me/script_vpn"
+
+                send_notification "$message"
+                echo -e "${GREEN}Backup notification sent to Telegram.${NC}"
+            else
+                echo -e "${RED}Failed to upload backup file. Sending file directly...${NC}"
+                caption="Zivpn Backup (Upload Failed) - $(date +'%Y-%m-%d %H:%M:%S')"
+                send_document "$backup_file" "$caption"
+                echo -e "${GREEN}Backup file sent directly to Telegram.${NC}"
+            fi
             ;;
         2)
             read -p "Enter the full path to the backup file: " backup_file
@@ -48,6 +80,22 @@ backup_restore() {
                 sync_config
             else
                 echo -e "${RED}Error: Backup file not found.${NC}"
+            fi
+            ;;
+        3)
+            read -p "Enter the backup download link: " backup_link
+            temp_backup="/tmp/zivpn_restore_$(date +%s).tar.gz"
+            echo -e "${WHITE}Downloading backup from link...${NC}"
+            wget -q -O "$temp_backup" "$backup_link"
+
+            if [ -f "$temp_backup" ]; then
+                echo -e "${GREEN}Download successful. Restoring...${NC}"
+                tar -xzf "$temp_backup" -C /etc/zivpn
+                rm "$temp_backup"
+                echo -e "${GREEN}Restore successful. Restarting service...${NC}"
+                sync_config
+            else
+                echo -e "${RED}Error: Failed to download backup file.${NC}"
             fi
             ;;
         *)
