@@ -89,6 +89,65 @@ interactive_uninstall() {
 
 # --- END of restored functions ---
 
+# Fungsi untuk mengonfigurasi pengaturan bot Telegram
+configure_bot_settings() {
+    clear
+    BOT_CONFIG="/etc/zivpn/bot_config.sh"
+
+    # Muat konfigurasi yang ada jika file ada
+    if [ -f "$BOT_CONFIG" ]; then
+        source "$BOT_CONFIG"
+    fi
+
+    echo -e "${YELLOW}--- Konfigurasi Notifikasi Bot Telegram ---${NC}"
+    echo -e "${WHITE}Masukkan detail bot Anda. Biarkan kosong untuk tidak mengubah nilai saat ini.${NC}"
+
+    # Minta Bot Token
+    read -p "Masukkan Bot Token Anda [saat ini: ${BOT_TOKEN:-'tidak diatur'}]: " new_token
+    if [ -n "$new_token" ]; then
+        BOT_TOKEN="$new_token"
+    fi
+
+    # Minta Chat ID
+    read -p "Masukkan Chat ID Anda [saat ini: ${CHAT_ID:-'tidak diatur'}]: " new_chat_id
+    if [ -n "$new_chat_id" ]; then
+        CHAT_ID="$new_chat_id"
+    fi
+
+    # Simpan konfigurasi ke file
+    echo "#!/bin/bash" > "$BOT_CONFIG"
+    echo "BOT_TOKEN='${BOT_TOKEN}'" >> "$BOT_CONFIG"
+    echo "CHAT_ID='${CHAT_ID}'" >> "$BOT_CONFIG"
+
+    echo -e "${GREEN}Pengaturan bot berhasil disimpan di $BOT_CONFIG${NC}"
+    sleep 2
+}
+
+# Fungsi untuk mengirim notifikasi ke Telegram
+send_notification() {
+    local message="$1"
+    BOT_CONFIG="/etc/zivpn/bot_config.sh"
+
+    # Periksa apakah file konfigurasi ada dan dapat dibaca
+    if [ -f "$BOT_CONFIG" ]; then
+        source "$BOT_CONFIG"
+    else
+        # Jangan tampilkan error jika bot tidak dikonfigurasi
+        return
+    fi
+
+    # Periksa apakah token dan ID ada isinya
+    if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+        return
+    fi
+
+    # Kirim pesan menggunakan curl dalam mode senyap
+    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+         -d "chat_id=${CHAT_ID}" \
+         -d "text=${message}" \
+         -d "parse_mode=HTML" > /dev/null
+}
+
 
 # Fungsi bantuan untuk menyinkronkan kata sandi dari user.db.json ke config.json
 sync_config() {
@@ -127,9 +186,33 @@ add_account() {
 
     jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
-    echo -e "${GREEN}Account '$username' created successfully. Expires on $expiry_readable.${NC}"
+    # Tampilkan detail di terminal dan kirim notifikasi
+    IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+
+    # Format untuk terminal
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${GREEN}    ☘ NEW ACCOUNT DETAIL ☘${NC}"
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${WHITE}User      : $username${NC}"
+    echo -e "${WHITE}Password  : $password${NC}"
+    echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${BLUE}Expires on: $expiry_readable${NC}"
+
+    # Format untuk Telegram (menggunakan tag HTML untuk tebal)
+    message="────────────────────%0A"
+    message+="    ☘ <b>NEW ACCOUNT DETAIL</b> ☘%0A"
+    message+="────────────────────%0A"
+    message+="<b>User</b>      : <code>${username}</code>%0A"
+    message+="<b>Password</b>  : <code>${password}</code>%0A"
+    message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="────────────────────%0A"
+    message+="Note: Auto notif from your script..."
+
+    send_notification "$message"
+
     sync_config
-    sleep 2
+    read -p "Press [Enter] to continue..."
 }
 
 # Fungsi untuk menambahkan akun trial
@@ -159,9 +242,33 @@ add_trial_account() {
 
     jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
-    echo -e "${GREEN}Trial account '$username' created successfully. Expires on $expiry_readable.${NC}"
+    # Tampilkan detail di terminal dan kirim notifikasi
+    IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+
+    # Format untuk terminal
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${GREEN}    ☘ NEW TRIAL ACCOUNT ☘${NC}"
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${WHITE}User      : $username${NC}"
+    echo -e "${WHITE}Password  : $password${NC}"
+    echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+    echo -e "${YELLOW}────────────────────${NC}"
+    echo -e "${BLUE}Expires on: $expiry_readable${NC}"
+
+    # Format untuk Telegram
+    message="────────────────────%0A"
+    message+="    ☘ <b>NEW TRIAL ACCOUNT</b> ☘%0A"
+    message+="────────────────────%0A"
+    message+="<b>User</b>      : <code>${username}</code>%0A"
+    message+="<b>Password</b>  : <code>${password}</code>%0A"
+    message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="────────────────────%0A"
+    message+="Note: Auto notif from your script..."
+
+    send_notification "$message"
+
     sync_config
-    sleep 2
+    read -p "Press [Enter] to continue..."
 }
 
 
@@ -290,7 +397,8 @@ show_menu() {
     echo -e "${WHITE}[7] 🔄 Full Backup/Restore${NC}"
     echo -e "${WHITE}[8] 🖥️ VPS Info${NC}"
     echo -e "${BLUE}<<< ... ... ... >>>${NC}"
-    echo -e "${WHITE}[9] ❌ Uninstall ZIVPN${NC}"
+    echo -e "${WHITE}[9] ⚙️ Atur Notifikasi Bot${NC}"
+    echo -e "${WHITE}[10] ❌ Uninstall ZIVPN${NC}"
     echo -e "${WHITE}[0] 🚪 Exit${NC}"
     echo ""
     echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
@@ -310,7 +418,8 @@ while true; do
         6) edit_password ;;
         7) backup_restore ;;
         8) vps_info ;;
-        9) interactive_uninstall ;;
+        9) configure_bot_settings ;;
+        10) interactive_uninstall ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
