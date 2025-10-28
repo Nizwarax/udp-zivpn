@@ -90,7 +90,8 @@ sudo chmod +x /usr/local/bin/uninstall.sh
 # Pasang skrip pembersihan otomatis dan jadwalkan
 sudo wget -O /usr/local/bin/zivpn-cleanup.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-cleanup.sh
 sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
-sudo bash -c 'echo "0 2 * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.d/zivpn-cleanup'
+# Jalankan setiap menit untuk penghapusan yang mendekati real-time
+sudo bash -c 'echo "* * * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.d/zivpn-cleanup'
 
 # Get Public IP
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')

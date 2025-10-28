@@ -7,7 +7,8 @@ Selamat datang di Skrip Manajemen Zivpn UDP! Alat ini dirancang untuk menyederha
 - **Instalasi Otomatis**: Cukup jalankan satu perintah untuk menginstal layanan Zivpn, dependensi, dan semua skrip manajemen.
 - **Menu Interaktif**: Antarmuka berbasis menu yang mudah digunakan untuk mengelola pengguna, melihat informasi, dan lainnya.
 - **Manajemen Pengguna Lengkap**: Tambah, hapus, dan lihat pengguna reguler dan percobaan langsung dari menu.
-- **Pembersihan Otomatis**: Pengguna yang kedaluwarsa secara otomatis dihapus setiap hari.
+- **Pembersihan Otomatis**: Pengguna yang kedaluwarsa secara otomatis dihapus.
+- **Penghapusan "Instan"**: Akun yang kedaluwarsa (baik reguler maupun trial) akan dihapus secara otomatis dalam satu menit setelah waktunya habis.
 - **Uninstaller Lengkap**: Satu perintah untuk menghapus Zivpn dan semua komponennya dari sistem Anda.
 - **Dukungan Multi-Arsitektur**: Bekerja pada server AMD64 (x86_64) dan ARM64.
 

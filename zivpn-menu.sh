@@ -190,14 +190,15 @@ add_account() {
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
 
     # Format untuk terminal
+    expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y')
     echo -e "${YELLOW}────────────────────${NC}"
     echo -e "${GREEN}    ☘ NEW ACCOUNT DETAIL ☘${NC}"
     echo -e "${YELLOW}────────────────────${NC}"
     echo -e "${WHITE}User      : $username${NC}"
     echo -e "${WHITE}Password  : $password${NC}"
     echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+    echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
     echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${BLUE}Expires on: $expiry_readable${NC}"
 
     # Format untuk Telegram (menggunakan tag HTML untuk tebal)
     message="────────────────────%0A"
@@ -206,6 +207,7 @@ add_account() {
     message+="<b>User</b>      : <code>${username}</code>%0A"
     message+="<b>Password</b>  : <code>${password}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} HARI</code>%0A"
     message+="────────────────────%0A"
     message+="Note: Auto notif from your script..."
 
@@ -246,14 +248,15 @@ add_trial_account() {
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
 
     # Format untuk terminal
+    expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y %H:%M')
     echo -e "${YELLOW}────────────────────${NC}"
     echo -e "${GREEN}    ☘ NEW TRIAL ACCOUNT ☘${NC}"
     echo -e "${YELLOW}────────────────────${NC}"
     echo -e "${WHITE}User      : $username${NC}"
     echo -e "${WHITE}Password  : $password${NC}"
     echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+    echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
     echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${BLUE}Expires on: $expiry_readable${NC}"
 
     # Format untuk Telegram
     message="────────────────────%0A"
@@ -262,6 +265,7 @@ add_trial_account() {
     message+="<b>User</b>      : <code>${username}</code>%0A"
     message+="<b>Password</b>  : <code>${password}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} MENIT</code>%0A"
     message+="────────────────────%0A"
     message+="Note: Auto notif from your script..."
 
