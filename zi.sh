@@ -74,8 +74,9 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF'
 
-# Buat file database pengguna awal
+# Buat file database pengguna awal dan file konfigurasi tema
 sudo bash -c 'echo "[]" > /etc/zivpn/users.db.json'
+sudo bash -c 'echo "rainbow" > /etc/zivpn/theme.conf'
 
 # Bersihin iptables rules yang lama
 INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
