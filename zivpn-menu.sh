@@ -412,8 +412,8 @@ show_menu() {
     echo -e "${WHITE}[ 7] 🔄  Full Backup/Restore${NC}"
     echo -e "${WHITE}[ 8] 🖥️  VPS Info${NC}"
     echo -e "${BLUE}<<< ... ... ... >>>${NC}"
-    echo -e "${WHITE}[ 9] ⚙️   Atur Notifikasi Bot${NC}"
-    echo -e "${WHITE}[10] ❌  Uninstall ZIVPN${NC}"
+    echo -e "${WHITE}[ 9] ⚙️  Atur Notifikasi Bot${NC}"
+    echo -e "${WHITE}[10] ❌ Uninstall ZIVPN${NC}"
     echo -e "${WHITE}[ 0] 🚪  Exit${NC}"
     echo ""
     ) | $LOLCAT
