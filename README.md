@@ -1,70 +1,46 @@
-# Manajer VPN Terpadu (VLESS & Zivpn)
+# Skrip Manajemen Zivpn UDP
 
-Selamat datang di Manajer VPN Terpadu, sebuah koleksi skrip yang dirancang untuk menyederhanakan instalasi dan manajemen layanan VLESS dan Zivpn di server Anda. Lupakan perintah yang rumit dan manajemen manual—semua yang Anda butuhkan kini terpusat dalam satu antarmuka yang mudah digunakan.
-
-## 🚀 Instalasi Cepat
-
-Cukup jalankan perintah di bawah ini untuk menginstal manajer VPN secara otomatis:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/installer.sh)
-```
-
-Setelah selesai, menu akan otomatis muncul. Untuk menjalankannya lagi di masa mendatang, cukup gunakan perintah `sudo vpn`.
-
----
-
-![](https://github.com/powermx/dl/blob/master/zivpn.png)
+Selamat datang di Skrip Manajemen Zivpn UDP! Alat ini dirancang untuk menyederhanakan instalasi, konfigurasi, dan pengelolaan layanan Zivpn UDP di server Debian atau Ubuntu Anda.
 
 ## ✨ Fitur Utama
 
-- **Manajemen Terpusat:** Kontrol layanan VLESS dan Zivpn Anda dari satu menu utama.
-- **Instalasi Otomatis:** Skrip secara cerdas mendeteksi layanan yang belum terinstal dan menawarkan untuk menginstalnya secara otomatis.
-- **Dukungan Multi-Arsitektur:** Instalasi Zivpn secara otomatis mendeteksi arsitektur server (AMD64 atau ARM64) dan menjalankan installer yang benar.
-- **Manajemen Pengguna Tingkat Lanjut:**
-  - **Akun Reguler:** Buat akun dengan masa aktif yang dapat disesuaikan (misalnya, 30 hari).
-  - **Akun Trial:** Buat akun uji coba dengan masa aktif singkat yang diukur dalam hitungan menit.
-  - **Pembersihan Otomatis:** Sistem cron job yang berjalan **setiap menit** secara otomatis menghapus semua akun (reguler dan trial) yang telah kedaluwarsa, memastikan server Anda selalu bersih.
+- **Instalasi Otomatis**: Cukup jalankan satu perintah untuk menginstal layanan Zivpn, dependensi, dan semua skrip manajemen.
+- **Menu Interaktif**: Antarmuka berbasis menu yang mudah digunakan untuk mengelola pengguna, melihat informasi, dan lainnya.
+- **Manajemen Pengguna Lengkap**: Tambah, hapus, dan lihat pengguna reguler dan percobaan langsung dari menu.
+- **Pembersihan Otomatis**: Pengguna yang kedaluwarsa secara otomatis dihapus setiap hari.
+- **Uninstaller Lengkap**: Satu perintah untuk menghapus Zivpn dan semua komponennya dari sistem Anda.
+- **Dukungan Multi-Arsitektur**: Bekerja pada server AMD64 (x86_64) dan ARM64.
 
-## 🚀 Memulai
+## 🚀 Instalasi
 
-Cukup jalankan perintah `vpn` untuk mengakses menu manajemen utama. Jika ini adalah pertama kalinya Anda, skrip akan memandu Anda melalui proses instalasi.
+Untuk menginstal, cukup salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.
 
-### Cara Menjalankan
+### AMD64 (x86_64)
+```bash
+sudo wget -O /usr/local/bin/zi.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zi.sh && sudo chmod +x /usr/local/bin/zi.sh && sudo zi.sh
+```
 
-Buka terminal Anda dan jalankan perintah berikut:
+### ARM64
+```bash
+sudo wget -O /usr/local/bin/zi2.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zi2.sh && sudo chmod +x /usr/local/bin/zi2.sh && sudo zi2.sh
+```
+
+## 🛠️ Penggunaan
+
+Setelah instalasi selesai, Anda dapat mengakses menu manajemen kapan saja dengan menjalankan perintah berikut:
 
 ```bash
-sudo vpn
+zivpn
 ```
 
-Jika perintah `vpn` belum tersedia, Anda dapat mengaturnya dengan memindahkan skrip `vpn-manager.sh` ke `/usr/local/bin/vpn`.
+Dari menu ini, Anda dapat mengelola semua aspek layanan Zivpn Anda.
 
-## 🖥️ Tampilan Menu
+## 🗑️ Uninstall
 
-Menu utama menyediakan akses mudah ke semua fitur:
+Jika Anda ingin menghapus Zivpn dari server Anda, Anda dapat melakukannya melalui menu atau dengan menjalankan perintah berikut secara langsung:
 
-```
-=============================================
-  🚀 MANAJER VPN TERPADU 🚀
-=============================================
-  Pilih layanan yang ingin Anda kelola:
-
-  1) 🌐 Kelola VLESS
-  2) 🛡️  Kelola Zivpn
-  3) ❌ Keluar
+```bash
+uninstall.sh
 ```
 
-Dari sini, Anda dapat masuk ke sub-menu untuk VLESS atau Zivpn, yang masing-masing memiliki fitur lengkap untuk mengelola pengguna.
-
-## 📁 Struktur File
-
-- `vpn-manager.sh`: Skrip menu utama. Diinstal sebagai `vpn`.
-- `vless-manager.sh`: Manajer untuk layanan VLESS.
-- `zivpn-menu.sh`: Manajer untuk layanan Zivpn.
-- `zi.sh` / `zi2.sh`: Skrip instalasi untuk Zivpn (AMD64/ARM64).
-- `vless-cleanup.sh`: Skrip pembersihan otomatis untuk VLESS.
-- `zivpn-cleanup.sh`: Skrip pembersihan otomatis untuk Zivpn.
-
----
-*Bash script by Global Tunneling Nusantara, ditingkatkan oleh Jules.*
+Skrip uninstal akan meminta konfirmasi sebelum menghapus semua file, layanan, dan aturan firewall yang terkait dengan Zivpn.

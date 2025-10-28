@@ -54,13 +54,17 @@ echo -e "${WHITE}   - Aturan UFW dihapus.${NC}"
 
 # Hapus aturan iptables (lebih andal)
 INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-# Terus hapus aturan PREROUTING hingga tidak ada lagi untuk menghindari error
-while sudo iptables -t nat -D PREROUTING -i "$INTERFACE" -p udp --dport 6000:19999 -j DNAT --to-destination :5667 2>/dev/null; do :; done
-sudo iptables -D FORWARD -p udp -d 127.0.0.1 --dport 5667 -j ACCEPT 2>/dev/null
-sudo iptables -t nat -D POSTROUTING -s 127.0.0.1/32 -o "$INTERFACE" -j MASQUERADE 2>/dev/null
-# Simpan perubahan iptables
-sudo netfilter-persistent save > /dev/null 2>&1
-echo -e "${WHITE}   - Aturan iptables dihapus.${NC}"
+if [ -z "$INTERFACE" ]; then
+    echo -e "${YELLOW}   - Tidak dapat mendeteksi antarmuka jaringan utama. Aturan iptables mungkin perlu dihapus secara manual.${NC}"
+else
+    # Terus hapus aturan PREROUTING hingga tidak ada lagi untuk menghindari error
+    while sudo iptables -t nat -D PREROUTING -i "$INTERFACE" -p udp --dport 6000:19999 -j DNAT --to-destination :5667 2>/dev/null; do :; done
+    sudo iptables -D FORWARD -p udp -d 127.0.0.1 --dport 5667 -j ACCEPT 2>/dev/null
+    sudo iptables -t nat -D POSTROUTING -s 127.0.0.1/32 -o "$INTERFACE" -j MASQUERADE 2>/dev/null
+    # Simpan perubahan iptables
+    sudo netfilter-persistent save > /dev/null 2>&1
+    echo -e "${WHITE}   - Aturan iptables dihapus.${NC}"
+fi
 
 echo -e "${GREEN}Uninstall ZIVPN selesai.${NC}"
 echo -e "${WHITE}Sistem Anda telah dibersihkan dari instalasi Zivpn.${NC}"

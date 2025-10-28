@@ -83,6 +83,10 @@ sudo ufw allow 5667/udp > /dev/null
 sudo wget -O /usr/local/bin/zivpn https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-menu.sh
 sudo chmod +x /usr/local/bin/zivpn
 
+# Unduh skrip uninstall dan letakkan di path yang dapat diakses
+sudo wget -O /usr/local/bin/uninstall.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/uninstall.sh
+sudo chmod +x /usr/local/bin/uninstall.sh
+
 # Pasang skrip pembersihan otomatis dan jadwalkan
 sudo wget -O /usr/local/bin/zivpn-cleanup.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-cleanup.sh
 sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
