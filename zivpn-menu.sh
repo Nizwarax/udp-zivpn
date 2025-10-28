@@ -11,132 +11,7 @@ GREEN='\033[1;32m'
 RED='\033[1;31m'
 NC='\033[0m'
 
-# Fungsi bantuan untuk menyinkronkan kata sandi dari user.db.json ke config.json
-sync_config() {
-    passwords=$(jq -r '.[].password' "$USER_DB")
-    jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
-    sudo systemctl daemon-reload
-    sudo systemctl restart zivpn.service > /dev/null 2>&1
-}
-
-# Fungsi untuk menambahkan akun
-add_account() {
-    clear
-    echo -e "${YELLOW}--- Add Account ---${NC}"
-    read -p "Enter username: " username
-    # Periksa apakah pengguna sudah ada
-    if jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' already exists.${NC}"
-        sleep 2
-        return
-    fi
-
-    read -p "Enter password: " password
-    read -p "Enter duration (in days): " duration
-
-    expiry_date=$(date -d "+$duration days" +%Y-%m-%d)
-
-    new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --arg expiry "$expiry_date" \
-        '{username: $user, password: $pass, expiry_date: $expiry}')
-
-    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-
-    echo -e "${GREEN}Account '$username' created successfully. Expires on $expiry_date.${NC}"
-    sync_config
-    sleep 2
-}
-
-# Fungsi untuk menampilkan daftar akun
-list_accounts() {
-    clear
-    echo -e "${YELLOW}--- Account Details ---${NC}"
-    printf "${BLUE}%-20s | %-20s | %-15s${NC}\n" "Username" "Password" "Expiry Date"
-    echo -e "${BLUE}------------------------------------------------------------${NC}"
-    jq -r '.[] | "\(.username) | \(.password) | \(.expiry_date)"' "$USER_DB" | while IFS="|" read -r user pass expiry; do
-        printf "${WHITE}%-20s | %-20s | %-15s${NC}\n" "$user" "$pass" "$expiry"
-    done
-    echo -e "${BLUE}------------------------------------------------------------${NC}"
-    read -p "Press [Enter] to continue..."
-}
-
-# Fungsi untuk menghapus akun
-delete_account() {
-    clear
-    echo -e "${YELLOW}--- Delete Account ---${NC}"
-    read -p "Enter username to delete: " username
-
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
-        sleep 2
-        return
-    fi
-
-    jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-    echo -e "${GREEN}Account '$username' deleted successfully.${NC}"
-    sync_config
-    sleep 2
-}
-
-# Fungsi untuk mengedit tanggal kedaluwarsa
-edit_expiry() {
-    clear
-    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}"
-    read -p "Enter username to edit: " username
-
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
-        sleep 2
-        return
-    fi
-
-    read -p "Enter new duration (in days from today): " duration
-    new_expiry_date=$(date -d "+$duration days" +%Y-%m-%d)
-
-    jq --arg user "$username" --arg new_expiry "$new_expiry_date" '(.[] | select(.username == $user) | .expiry_date) |= $new_expiry' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-
-    echo -e "${GREEN}Expiry date for '$username' updated to $new_expiry_date.${NC}"
-    sleep 2
-}
-
-# Fungsi untuk mengedit kata sandi
-edit_password() {
-    clear
-    echo -e "${YELLOW}--- Edit Account Password ---${NC}"
-    read -p "Enter username to edit: " username
-
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
-        sleep 2
-        return
-    fi
-
-    read -p "Enter new password: " new_password
-
-    jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-
-    echo -e "${GREEN}Password for '$username' has been updated.${NC}"
-    sync_config
-    sleep 2
-}
-
-# Fungsi untuk menghapus akun yang sudah kedaluwarsa
-remove_expired() {
-    clear
-    echo -e "${YELLOW}--- Remove Expired Accounts ---${NC}"
-    today=$(date +%Y-%m-%d)
-
-    expired_users=$(jq -r --arg today "$today" '.[] | select(.expiry_date < $today) | .username' "$USER_DB" | tr '\n' ' ')
-
-    if [ -z "$expired_users" ]; then
-        echo -e "${WHITE}No expired accounts found.${NC}"
-    else
-        jq --arg today "$today" 'map(select(.expiry_date >= $today))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-        echo -e "${GREEN}Removed expired users: $expired_users${NC}"
-        sync_config
-    fi
-    read -p "Press [Enter] to continue..."
-}
-
+# --- Functions from original script that were removed ---
 
 # Fungsi untuk mencadangkan dan memulihkan
 backup_restore() {
@@ -191,13 +66,11 @@ interactive_uninstall() {
     read -p "Anda yakin ingin uninstall ZIVPN? [y/N]: " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${WHITE}Memulai proses uninstall...${NC}"
-        if wget -O uninstall.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/uninstall.sh; then
-            chmod +x uninstall.sh
-            ./uninstall.sh
-            echo -e "${GREEN}Proses uninstall selesai.${NC}"
-            exit 0
+        # Assuming uninstall.sh is in the same directory or PATH
+        if [ -f "uninstall.sh" ]; then
+             bash uninstall.sh
         else
-            echo -e "${RED}Gagal mengunduh skrip uninstall.${NC}"
+            echo -e "${RED}Gagal menemukan skrip uninstall.${NC}"
             sleep 2
         fi
     else
@@ -206,8 +79,183 @@ interactive_uninstall() {
     fi
 }
 
+# --- END of restored functions ---
 
-# Fungsi untuk menampilkan menu
+
+# Fungsi bantuan untuk menyinkronkan kata sandi dari user.db.json ke config.json
+sync_config() {
+    passwords=$(jq -r '.[].password' "$USER_DB")
+    jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    sudo systemctl daemon-reload
+    sudo systemctl restart zivpn.service > /dev/null 2>&1
+}
+
+# Fungsi untuk menambahkan akun reguler
+add_account() {
+    clear
+    echo -e "${YELLOW}--- Add Regular Account ---${NC}"
+    read -p "Enter username: " username
+    if jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "${RED}Error: Username '$username' already exists.${NC}"
+        sleep 2
+        return
+    fi
+
+    read -p "Enter password: " password
+    read -p "Enter duration (in days, default: 30): " duration
+    [[ -z "$duration" ]] && duration=30
+
+    expiry_timestamp=$(date -d "+$duration days" +%s)
+    expiry_readable=$(date -d "@$expiry_timestamp" '+%Y-%m-%d %H:%M:%S')
+
+    new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --argjson expiry "$expiry_timestamp" \
+        '{username: $user, password: $pass, expiry_timestamp: $expiry}')
+
+    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+
+    echo -e "${GREEN}Account '$username' created successfully. Expires on $expiry_readable.${NC}"
+    sync_config
+    sleep 2
+}
+
+# Fungsi untuk menambahkan akun trial
+add_trial_account() {
+    clear
+    echo -e "${YELLOW}--- Add Trial Account ---${NC}"
+    read -p "Enter username (e.g., trial-user): " username
+    if jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "${RED}Error: Username '$username' already exists.${NC}"
+        sleep 2
+        return
+    fi
+    [[ -z "$username" ]] && username="trial-$(date +%s)"
+
+
+    read -p "Enter password (or leave empty for random): " password
+    [[ -z "$password" ]] && password=$(head -c 8 /dev/urandom | base64)
+
+    read -p "Enter duration (in minutes, default: 60): " duration
+    [[ -z "$duration" ]] && duration=60
+
+    expiry_timestamp=$(date -d "+$duration minutes" +%s)
+    expiry_readable=$(date -d "@$expiry_timestamp" '+%Y-%m-%d %H:%M:%S')
+
+    new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --argjson expiry "$expiry_timestamp" \
+        '{username: $user, password: $pass, expiry_timestamp: $expiry}')
+
+    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+
+    echo -e "${GREEN}Trial account '$username' created successfully. Expires on $expiry_readable.${NC}"
+    sync_config
+    sleep 2
+}
+
+
+# Fungsi untuk menampilkan daftar akun
+list_accounts() {
+    clear
+    echo -e "${YELLOW}--- Account Details ---${NC}"
+    printf "${BLUE}%-20s | %-20s | %-25s${NC}\n" "Username" "Password" "Status"
+    echo -e "${BLUE}-------------------------------------------------------------------${NC}"
+
+    current_time=$(date +%s)
+
+    jq -c '.[]' "$USER_DB" | while read -r user_json; do
+        user=$(jq -r '.username' <<< "$user_json")
+        pass=$(jq -r '.password' <<< "$user_json")
+        expiry=$(jq -r '.expiry_timestamp // .expiry_date' <<< "$user_json") # Kompatibilitas mundur
+
+        # Konversi format YYYY-MM-DD ke timestamp jika perlu
+        if [[ ! "$expiry" =~ ^[0-9]+$ ]]; then
+            expiry=$(date -d "$expiry" +%s)
+        fi
+
+        if [[ "$expiry" -lt "$current_time" ]]; then
+            status="${RED}Kedaluwarsa${NC}"
+        else
+            remaining_seconds=$((expiry - current_time))
+            days=$((remaining_seconds / 86400))
+            hours=$(( (remaining_seconds % 86400) / 3600 ))
+            minutes=$(( (remaining_seconds % 3600) / 60 ))
+            if [[ "$days" -gt 0 ]]; then
+                status="${GREEN}Sisa ${days} hari, ${hours} jam${NC}"
+            elif [[ "$hours" -gt 0 ]]; then
+                status="${YELLOW}Sisa ${hours} jam, ${minutes} mnt${NC}"
+            else
+                status="${YELLOW}Sisa ${minutes} menit${NC}"
+            fi
+        fi
+        printf "${WHITE}%-20s | %-20s | %b${NC}\n" "$user" "$pass" "$status"
+    done
+
+    echo -e "${BLUE}-------------------------------------------------------------------${NC}"
+    read -p "Press [Enter] to continue..."
+}
+
+# Fungsi untuk menghapus akun
+delete_account() {
+    clear
+    echo -e "${YELLOW}--- Delete Account ---${NC}"
+    read -p "Enter username to delete: " username
+
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        sleep 2
+        return
+    fi
+
+    jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    echo -e "${GREEN}Account '$username' deleted successfully.${NC}"
+    sync_config
+    sleep 2
+}
+
+# Fungsi untuk mengedit tanggal kedaluwarsa
+edit_expiry() {
+    clear
+    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}"
+    read -p "Enter username to edit: " username
+
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        sleep 2
+        return
+    fi
+
+    read -p "Enter new duration (in days from today): " duration
+    new_expiry_timestamp=$(date -d "+$duration days" +%s)
+
+    # Hapus field lama jika ada
+    jq --arg user "$username" --argjson new_expiry "$new_expiry_timestamp" \
+       '(.[] | select(.username == $user) | .expiry_timestamp) = $new_expiry | del(.[] | select(.username == $user) | .expiry_date)' \
+       "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+
+    echo -e "${GREEN}Expiry date for '$username' updated.${NC}"
+    sleep 2
+}
+
+# Fungsi untuk mengedit kata sandi
+edit_password() {
+    clear
+    echo -e "${YELLOW}--- Edit Account Password ---${NC}"
+    read -p "Enter username to edit: " username
+
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        sleep 2
+        return
+    fi
+
+    read -p "Enter new password: " new_password
+
+    jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+
+    echo -e "${GREEN}Password for '$username' has been updated.${NC}"
+    sync_config
+    sleep 2
+}
+
+# --- Tampilan Menu Utama ---
 show_menu() {
     clear
     printf "${BLUE}      __________     ______  _   _      ${NC}\n"
@@ -216,21 +264,18 @@ show_menu() {
     printf "${BLUE}/_  _\\/ /_ | |  \\ V / |  __/| |\\  /_  _\\\\${NC}\n"
     printf "${BLUE}  \\/ /____|___|  \\_/  |_|   |_| \\_| \\/  ${NC}\n"
     printf "${BLUE}                                        ${NC}\n"
-    echo -e "${WHITE}    ZIVPN MANAGER - v1.5 for @Deki_niswara${NC}"
-    echo -e "${WHITE}    by: Global Tunneling Nusantara${NC}"
-    echo -e "${YELLOW}==========================================${NC}"
-    echo -e "${YELLOW}||${WHITE}    ACCOUNT MANAGEMENT PANEL </>      ${YELLOW}||${NC}"
+    echo -e "${WHITE}    ZIVPN MANAGER - v2.0 (Advanced)${NC}"
     echo -e "${YELLOW}==========================================${NC}"
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     echo -e "${WHITE}🌍 Public IP Address: < ${YELLOW}$IP_ADDRESS${WHITE} >${NC}"
     echo -e "${BLUE}<<< === === === === === === === >>>${NC}"
-    echo -e "${WHITE}[1] 📖 Add Account${NC}"
-    echo -e "${WHITE}[2] 📄 List Account Details${NC}"
-    echo -e "${WHITE}[3] 🗑️ Delete Account${NC}"
-    echo -e "${WHITE}[4] 📅 Edit Account Expiry Date${NC}"
-    echo -e "${WHITE}[5] 🔄 Full Backup/Restore Acc.${NC}"
-    echo -e "${WHITE}[6] 🔑 Edit Account Password${NC}"
-    echo -e "${WHITE}[7] 🧹 Remove Expired Accounts${NC}"
+    echo -e "${WHITE}[1] ➕ Add Regular Account${NC}"
+    echo -e "${WHITE}[2] ⏳ Add Trial Account${NC}"
+    echo -e "${WHITE}[3] 📄 List Accounts${NC}"
+    echo -e "${WHITE}[4] 🗑️ Delete Account${NC}"
+    echo -e "${WHITE}[5] 📅 Edit Expiry Date${NC}"
+    echo -e "${WHITE}[6] 🔑 Edit Password${NC}"
+    echo -e "${WHITE}[7] 🔄 Full Backup/Restore${NC}"
     echo -e "${WHITE}[8] 🖥️ VPS Info${NC}"
     echo -e "${BLUE}<<< ... ... ... >>>${NC}"
     echo -e "${WHITE}[9] ❌ Uninstall ZIVPN${NC}"
@@ -246,17 +291,17 @@ while true; do
     read -r choice
     case $choice in
         1) add_account ;;
-        2) list_accounts ;;
-        3) delete_account ;;
-        4) edit_expiry ;;
-        5) backup_restore ;;
+        2) add_trial_account ;;
+        3) list_accounts ;;
+        4) delete_account ;;
+        5) edit_expiry ;;
         6) edit_password ;;
-        7) remove_expired ;;
+        7) backup_restore ;;
         8) vps_info ;;
         9) interactive_uninstall ;;
         0) exit 0 ;;
         *)
-            echo -e "${RED}Opsi tidak valid, silakan coba lagi.${NC}"
+            echo -e "${RED}Invalid option, please try again.${NC}"
             sleep 2
             ;;
     esac
