@@ -11,6 +11,13 @@ GREEN='\033[1;32m'
 RED='\033[1;31m'
 NC='\033[0m'
 
+# Check for lolcat
+if command -v lolcat &> /dev/null; then
+    LOLCAT="lolcat"
+else
+    LOLCAT="cat"
+fi
+
 # --- Functions from original script that were removed ---
 
 # Fungsi untuk mencadangkan dan memulihkan
@@ -47,15 +54,17 @@ backup_restore() {
 # Fungsi untuk info VPS
 vps_info() {
     clear
-    echo -e "${YELLOW}--- VPS Info ---${NC}"
-    echo -e "${WHITE}Hostname: $(hostname)${NC}"
-    echo -e "${WHITE}OS: $(grep PRETTY_NAME /etc/os-release | cut -d'=' -f2 | tr -d '\"')${NC}"
-    echo -e "${WHITE}Kernel: $(uname -r)${NC}"
-    echo -e "${WHITE}Uptime: $(uptime -p)${NC}"
-    echo -e "${WHITE}Public IP: $(curl -s ifconfig.me || hostname -I | awk '{print $1}')${NC}"
-    echo -e "${WHITE}CPU: $(lscpu | grep 'Model name' | awk -F: '{print $2}' | sed 's/^[ \t]*//')${NC}"
-    echo -e "${WHITE}RAM: $(free -h | grep Mem | awk '{print $2}')${NC}"
-    echo -e "${WHITE}Disk: $(df -h / | tail -n 1 | awk '{print $2}')${NC}"
+    (
+        echo -e "${YELLOW}--- VPS Info ---${NC}"
+        echo -e "${WHITE}Hostname: $(hostname)${NC}"
+        echo -e "${WHITE}OS: $(grep PRETTY_NAME /etc/os-release | cut -d'=' -f2 | tr -d '\"')${NC}"
+        echo -e "${WHITE}Kernel: $(uname -r)${NC}"
+        echo -e "${WHITE}Uptime: $(uptime -p)${NC}"
+        echo -e "${WHITE}Public IP: $(curl -s ifconfig.me || hostname -I | awk '{print $1}')${NC}"
+        echo -e "${WHITE}CPU: $(lscpu | grep 'Model name' | awk -F: '{print $2}' | sed 's/^[ \t]*//')${NC}"
+        echo -e "${WHITE}RAM: $(free -h | grep Mem | awk '{print $2}')${NC}"
+        echo -e "${WHITE}Disk: $(df -h / | tail -n 1 | awk '{print $2}')${NC}"
+    ) | $LOLCAT
     read -p "Press [Enter] to continue..."
 }
 
@@ -191,14 +200,16 @@ add_account() {
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y')
-    echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${GREEN}    ☘ NEW ACCOUNT DETAIL ☘${NC}"
-    echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${WHITE}User      : $username${NC}"
-    echo -e "${WHITE}Password  : $password${NC}"
-    echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
-    echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
-    echo -e "${YELLOW}────────────────────${NC}"
+    (
+        echo -e "${YELLOW}────────────────────${NC}"
+        echo -e "${GREEN}    ☘ NEW ACCOUNT DETAIL ☘${NC}"
+        echo -e "${YELLOW}────────────────────${NC}"
+        echo -e "${WHITE}User      : $username${NC}"
+        echo -e "${WHITE}Password  : $password${NC}"
+        echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+        echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
+        echo -e "${YELLOW}────────────────────${NC}"
+    ) | $LOLCAT
 
     # Format untuk Telegram (menggunakan tag HTML untuk tebal)
     message="────────────────────%0A"
@@ -249,14 +260,16 @@ add_trial_account() {
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y %H:%M')
-    echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${GREEN}    ☘ NEW TRIAL ACCOUNT ☘${NC}"
-    echo -e "${YELLOW}────────────────────${NC}"
-    echo -e "${WHITE}User      : $username${NC}"
-    echo -e "${WHITE}Password  : $password${NC}"
-    echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
-    echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
-    echo -e "${YELLOW}────────────────────${NC}"
+    (
+        echo -e "${YELLOW}────────────────────${NC}"
+        echo -e "${GREEN}    ☘ NEW TRIAL ACCOUNT ☘${NC}"
+        echo -e "${YELLOW}────────────────────${NC}"
+        echo -e "${WHITE}User      : $username${NC}"
+        echo -e "${WHITE}Password  : $password${NC}"
+        echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+        echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
+        echo -e "${YELLOW}────────────────────${NC}"
+    ) | $LOLCAT
 
     # Format untuk Telegram
     message="────────────────────%0A"
@@ -279,39 +292,41 @@ add_trial_account() {
 # Fungsi untuk menampilkan daftar akun
 list_accounts() {
     clear
-    echo -e "${YELLOW}--- Account Details ---${NC}"
-    printf "${BLUE}%-20s | %-20s | %-25s${NC}\n" "Username" "Password" "Status"
-    echo -e "${BLUE}-------------------------------------------------------------------${NC}"
+    (
+        echo -e "${YELLOW}--- Account Details ---${NC}"
+        printf "${BLUE}%-20s | %-20s | %-25s${NC}\n" "Username" "Password" "Status"
+        echo -e "${BLUE}-------------------------------------------------------------------${NC}"
 
-    # Proses seluruh logika di dalam satu panggilan jq untuk efisiensi
-    jq -r --argjson now "$(date +%s)" '
-        .[] |
-        . as $user |
-        (
-            ($user.expiry_timestamp // ($user.expiry_date | fromdate)) as $expiry_ts |
-            ($expiry_ts - $now) as $remaining_seconds |
-            if $remaining_seconds <= 0 then
-                "\u001b[1;31mKedaluwarsa\u001b[0m"
-            else
-                ($remaining_seconds / 86400 | floor) as $days |
-                (($remaining_seconds % 86400) / 3600 | floor) as $hours |
-                (($remaining_seconds % 3600) / 60 | floor) as $minutes |
-                if $days > 0 then
-                    "\u001b[1;32mSisa \($days) hari, \($hours) jam\u001b[0m"
-                elif $hours > 0 then
-                    "\u001b[1;33mSisa \($hours) jam, \($minutes) mnt\u001b[0m"
+        # Proses seluruh logika di dalam satu panggilan jq untuk efisiensi
+        jq -r --argjson now "$(date +%s)" '
+            .[] |
+            . as $user |
+            (
+                ($user.expiry_timestamp // ($user.expiry_date | fromdate)) as $expiry_ts |
+                ($expiry_ts - $now) as $remaining_seconds |
+                if $remaining_seconds <= 0 then
+                    "\u001b[1;31mKedaluwarsa\u001b[0m"
                 else
-                    "\u001b[1;33mSisa \($minutes) menit\u001b[0m"
+                    ($remaining_seconds / 86400 | floor) as $days |
+                    (($remaining_seconds % 86400) / 3600 | floor) as $hours |
+                    (($remaining_seconds % 3600) / 60 | floor) as $minutes |
+                    if $days > 0 then
+                        "\u001b[1;32mSisa \($days) hari, \($hours) jam\u001b[0m"
+                    elif $hours > 0 then
+                        "\u001b[1;33mSisa \($hours) jam, \($minutes) mnt\u001b[0m"
+                    else
+                        "\u001b[1;33mSisa \($minutes) menit\u001b[0m"
+                    end
                 end
-            end
-        ) as $status |
-        [$user.username, $user.password, $status] |
-        @tsv' "$USER_DB" |
-    while IFS=$'\t' read -r user pass status; do
-        printf "${WHITE}%-20s | %-20s | %b${NC}\n" "$user" "$pass" "$status"
-    done
+            ) as $status |
+            [$user.username, $user.password, $status] |
+            @tsv' "$USER_DB" |
+        while IFS=$'\t' read -r user pass status; do
+            printf "${WHITE}%-20s | %-20s | %b${NC}\n" "$user" "$pass" "$status"
+        done
 
-    echo -e "${BLUE}-------------------------------------------------------------------${NC}"
+        echo -e "${BLUE}-------------------------------------------------------------------${NC}"
+    ) | $LOLCAT
     read -p "Press [Enter] to continue..."
 }
 
@@ -381,6 +396,7 @@ edit_password() {
 # --- Tampilan Menu Utama ---
 show_menu() {
     clear
+    (
     printf "${BLUE}      __________     ______  _   _      ${NC}\n"
     printf "${BLUE}__/\\_|__  /_ _\\ \\   / /  _ \\| \\ | |_/\\__${NC}\n"
     printf "${BLUE}\\\    / / / | | \\ \\ / /| |_) |  \\| \\    /${NC}\n"
@@ -405,6 +421,7 @@ show_menu() {
     echo -e "${WHITE}[10] ❌ Uninstall ZIVPN${NC}"
     echo -e "${WHITE}[0] 🚪 Exit${NC}"
     echo ""
+    ) | $LOLCAT
     echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
 }
 

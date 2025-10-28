@@ -27,6 +27,18 @@ then
     sudo apt-get install curl -y
 fi
 
+if ! command -v figlet &> /dev/null; then
+    echo "figlet not found, installing..."
+    sudo apt-get install -y figlet
+fi
+
+if ! command -v lolcat &> /dev/null; then
+    echo "lolcat not found, installing..."
+    sudo apt-get install -y ruby-full
+    sudo gem install lolcat
+fi
+
+
 # Stop service kalau ada
 sudo systemctl stop zivpn.service > /dev/null 2>&1
 
