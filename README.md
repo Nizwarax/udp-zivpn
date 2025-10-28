@@ -1,40 +1,70 @@
-<<<<<<< HEAD
+# Manajer VPN Terpadu (VLESS & Zivpn)
+
+Selamat datang di Manajer VPN Terpadu, sebuah koleksi skrip yang dirancang untuk menyederhanakan instalasi dan manajemen layanan VLESS dan Zivpn di server Anda. Lupakan perintah yang rumit dan manajemen manual—semua yang Anda butuhkan kini terpusat dalam satu antarmuka yang mudah digunakan.
+
+## 🚀 Instalasi Cepat
+
+Cukup jalankan perintah di bawah ini untuk menginstal manajer VPN secara otomatis:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/installer.sh)
+```
+
+Setelah selesai, menu akan otomatis muncul. Untuk menjalankannya lagi di masa mendatang, cukup gunakan perintah `sudo vpn`.
+
+---
+
 ![](https://github.com/powermx/dl/blob/master/zivpn.png)
 
-UDP server installation for ZIVPN Tunnel (SSH/DNS/UDP) VPN app.
-<br>
+## ✨ Fitur Utama
 
->Server binary for Linux amd64 and arm.
+- **Manajemen Terpusat:** Kontrol layanan VLESS dan Zivpn Anda dari satu menu utama.
+- **Instalasi Otomatis:** Skrip secara cerdas mendeteksi layanan yang belum terinstal dan menawarkan untuk menginstalnya secara otomatis.
+- **Dukungan Multi-Arsitektur:** Instalasi Zivpn secara otomatis mendeteksi arsitektur server (AMD64 atau ARM64) dan menjalankan installer yang benar.
+- **Manajemen Pengguna Tingkat Lanjut:**
+  - **Akun Reguler:** Buat akun dengan masa aktif yang dapat disesuaikan (misalnya, 30 hari).
+  - **Akun Trial:** Buat akun uji coba dengan masa aktif singkat yang diukur dalam hitungan menit.
+  - **Pembersihan Otomatis:** Sistem cron job yang berjalan **setiap menit** secara otomatis menghapus semua akun (reguler dan trial) yang telah kedaluwarsa, memastikan server Anda selalu bersih.
 
-#### Check binary Linux
-```
-uname -m
-```
+## 🚀 Memulai
 
-#### Installation AMD
-```
-wget -O zi.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zi.sh; sudo chmod +x zi.sh; sudo ./zi.sh
-```
+Cukup jalankan perintah `vpn` untuk mengakses menu manajemen utama. Jika ini adalah pertama kalinya Anda, skrip akan memandu Anda melalui proses instalasi.
 
-#### Installation ARM
-```
-bash <(curl -fsSL https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zi2.sh)
-```
+### Cara Menjalankan
 
+Buka terminal Anda dan jalankan perintah berikut:
 
-### Uninstall
-
-```
-sudo wget -O ziun.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/uninstall.sh; sudo chmod +x ziun.sh; sudo ./ziun.sh
+```bash
+sudo vpn
 ```
 
-Client App available:
+Jika perintah `vpn` belum tersedia, Anda dapat mengaturnya dengan memindahkan skrip `vpn-manager.sh` ke `/usr/local/bin/vpn`.
 
-<a href="https://play.google.com/store/apps/details?id=com.zi.zivpn" target="_blank" rel="noreferrer">Download APP on Playstore</a>
-> ZiVPN
-                
-----
-Bash script by GTN
-=======
-# udp-zivpn
->>>>>>> fffffffff633fefcffffffffef05ac4a
+## 🖥️ Tampilan Menu
+
+Menu utama menyediakan akses mudah ke semua fitur:
+
+```
+=============================================
+  🚀 MANAJER VPN TERPADU 🚀
+=============================================
+  Pilih layanan yang ingin Anda kelola:
+
+  1) 🌐 Kelola VLESS
+  2) 🛡️  Kelola Zivpn
+  3) ❌ Keluar
+```
+
+Dari sini, Anda dapat masuk ke sub-menu untuk VLESS atau Zivpn, yang masing-masing memiliki fitur lengkap untuk mengelola pengguna.
+
+## 📁 Struktur File
+
+- `vpn-manager.sh`: Skrip menu utama. Diinstal sebagai `vpn`.
+- `vless-manager.sh`: Manajer untuk layanan VLESS.
+- `zivpn-menu.sh`: Manajer untuk layanan Zivpn.
+- `zi.sh` / `zi2.sh`: Skrip instalasi untuk Zivpn (AMD64/ARM64).
+- `vless-cleanup.sh`: Skrip pembersihan otomatis untuk VLESS.
+- `zivpn-cleanup.sh`: Skrip pembersihan otomatis untuk Zivpn.
+
+---
+*Bash script by Global Tunneling Nusantara, ditingkatkan oleh Jules.*
