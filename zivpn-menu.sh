@@ -84,8 +84,14 @@ interactive_uninstall() {
 
 # Fungsi bantuan untuk menyinkronkan kata sandi dari user.db.json ke config.json
 sync_config() {
-    passwords=$(jq -r '.[].password' "$USER_DB")
-    jq --argjson passwords "$(echo "$passwords" | jq -R . | jq -s .)" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    # Ekstrak semua kata sandi ke dalam array JSON menggunakan map
+    passwords_json=$(jq '[.[].password]' "$USER_DB")
+
+    # Perbarui file konfigurasi utama dengan array kata sandi yang baru
+    # Gunakan --argjson untuk memasukkan array JSON dengan aman
+    jq --argjson passwords "$passwords_json" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+
+    # Muat ulang dan restart layanan untuk menerapkan perubahan
     sudo systemctl daemon-reload
     sudo systemctl restart zivpn.service > /dev/null 2>&1
 }
@@ -158,33 +164,29 @@ list_accounts() {
     printf "${BLUE}%-20s | %-20s | %-25s${NC}\n" "Username" "Password" "Status"
     echo -e "${BLUE}-------------------------------------------------------------------${NC}"
 
-    current_time=$(date +%s)
-
-    jq -c '.[]' "$USER_DB" | while read -r user_json; do
-        user=$(jq -r '.username' <<< "$user_json")
-        pass=$(jq -r '.password' <<< "$user_json")
-        expiry=$(jq -r '.expiry_timestamp // .expiry_date' <<< "$user_json") # Kompatibilitas mundur
-
-        # Konversi format YYYY-MM-DD ke timestamp jika perlu
-        if [[ ! "$expiry" =~ ^[0-9]+$ ]]; then
-            expiry=$(date -d "$expiry" +%s)
-        fi
-
-        if [[ "$expiry" -lt "$current_time" ]]; then
-            status="${RED}Kedaluwarsa${NC}"
+    # Proses seluruh logika di dalam satu panggilan jq untuk efisiensi
+    jq -r --argjson now "$(date +%s)" '
+        .[] |
+        . as $user |
+        ($user.expiry_timestamp // ($user.expiry_date | fromdate)) as $expiry_ts |
+        ($expiry_ts - $now) as $remaining_seconds |
+        if $remaining_seconds <= 0 then
+            "\u001b[1;31mKedaluwarsa\u001b[0m"
         else
-            remaining_seconds=$((expiry - current_time))
-            days=$((remaining_seconds / 86400))
-            hours=$(( (remaining_seconds % 86400) / 3600 ))
-            minutes=$(( (remaining_seconds % 3600) / 60 ))
-            if [[ "$days" -gt 0 ]]; then
-                status="${GREEN}Sisa ${days} hari, ${hours} jam${NC}"
-            elif [[ "$hours" -gt 0 ]]; then
-                status="${YELLOW}Sisa ${hours} jam, ${minutes} mnt${NC}"
+            ($remaining_seconds / 86400 | floor) as $days |
+            (($remaining_seconds % 86400) / 3600 | floor) as $hours |
+            (($remaining_seconds % 3600) / 60 | floor) as $minutes |
+            if $days > 0 then
+                "\u001b[1;32mSisa \($days) hari, \($hours) jam\u001b[0m"
+            elif $hours > 0 then
+                "\u001b[1;33mSisa \($hours) jam, \($minutes) mnt\u001b[0m"
             else
-                status="${YELLOW}Sisa ${minutes} menit${NC}"
-            fi
-        fi
+                "\u001b[1;33mSisa \($minutes) menit\u001b[0m"
+            end
+        end as $status |
+        [$user.username, $user.password, $status] |
+        @tsv' "$USER_DB" |
+    while IFS=$'\t' read -r user pass status; do
         printf "${WHITE}%-20s | %-20s | %b${NC}\n" "$user" "$pass" "$status"
     done
 
