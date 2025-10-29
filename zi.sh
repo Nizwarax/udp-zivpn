@@ -132,27 +132,17 @@ sudo bash -c 'echo "* * * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.
 # Jalankan pemantauan server setiap 5 menit
 sudo bash -c 'echo "*/5 * * * * root /usr/local/bin/zivpn-monitor.sh" > /etc/cron.d/zivpn-monitor'
 
-# Get Public IP
-IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+# Pasang skrip MOTD (Message of the Day)
+sudo wget -O /etc/profile.d/zivpn-motd.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-motd.sh
+sudo chmod +x /etc/profile.d/zivpn-motd.sh
 
-# Define Colors
-BLUE='\033[1;34m'
-WHITE='\033[1;37m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# Clear the screen for a clean output
+# Pesan Selesai Instalasi
 clear
-
-# Display Welcome Message
-figlet -f standard "ZIVPN" | lolcat
-echo -e "============================================" | lolcat
-echo -e "            ZIVPN MANAGER - v1.5            " | lolcat
-echo -e "============================================" | lolcat
-echo -e "${WHITE}Server IP Address: ${IP_ADDRESS}${NC}"
-echo -e "${WHITE}Run the command 'zivpn' to access the panel.${NC}"
-echo -e "${YELLOW}Contact us on Telegram (@Deki_niswara) for support.${NC}"
-echo ""
+echo -e "\n${GREEN}============================================${NC}"
+echo -e "      ✅ ${WHITE}Instalasi ZIVPN Selesai!${NC} ✅"
+echo -e "${GREEN}============================================${NC}"
+echo -e "${WHITE}Untuk membuka menu, ketik:${NC} ${YELLOW}zivpn${NC}"
+echo -e "${WHITE}Pesan selamat datang akan muncul setiap kali Anda login.${NC}\n"
 
 # Cleanup
-rm zi-fixed.sh* > /dev/null 2>&1
+rm -f zi.sh* zi-fixed.sh* > /dev/null 2>&1
