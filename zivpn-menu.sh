@@ -483,87 +483,40 @@ list_accounts() {
     echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
-# --- Helper function to select a user by number ---
-select_user_by_number() {
-    clear
-    echo -e "${YELLOW}--- Pilih Akun ---${NC}\n"
-
-    # Read users into a bash array
-    mapfile -t users < <(jq -r '.[].username' "$USER_DB")
-
-    if [ ${#users[@]} -eq 0 ]; then
-        echo -e "${RED}Tidak ada akun yang ditemukan.${NC}"
-        sleep 2
-        return 1
-    fi
-
-    # Display users in a numbered list
-    for i in "${!users[@]}"; do
-        printf " [%2d] %s\n" "$((i+1))" "${users[$i]}"
-    done
-    echo ""
-
-    # Prompt user to select a number
-    local choice
-    while true; do
-        echo -n -e "${PROMPT_COLOR} -> Masukkan nomor akun (atau 0 untuk batal):${NC} "
-        read choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#users[@]} ]; then
-            # This is the critical part: we return the selected username to the caller
-            echo "${users[$((choice-1))]}"
-            return 0
-        elif [[ "$choice" == "0" ]]; then
-            return 1
-        else
-            echo -e "${RED}Pilihan tidak valid. Silakan coba lagi.${NC}"
-        fi
-    done
-}
-
-
 # Fungsi untuk menghapus akun
 delete_account() {
-    local username
-    username=$(select_user_by_number)
-    if [ $? -ne 0 ]; then
+    clear
+    echo -e "${YELLOW}--- Delete Account ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan dihapus:${NC} "
+    read username
+
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
+        sleep 2
         return
     fi
 
-    clear
-    echo -e "${YELLOW}--- Delete Account: $username ---${NC}\n"
-
-    echo -n -e "${PROMPT_COLOR}Anda yakin ingin menghapus akun '$username'? [y/N]:${NC} "
-    read confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-        echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
-        sync_config
-        sleep 2
-    else
-        echo -e "\n${YELLOW}Penghapusan dibatalkan.${NC}"
-        sleep 2
-    fi
+    jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
+    sync_config
+    sleep 2
 }
 
 # Fungsi untuk mengedit tanggal kedaluwarsa
 edit_expiry() {
-    local username
-    username=$(select_user_by_number)
-    if [ $? -ne 0 ]; then
-        return
-    fi
-
     clear
-    echo -e "${YELLOW}--- Edit Expiry for: $username ---${NC}\n"
+    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
+    read username
 
-    echo -n -e "${PROMPT_COLOR} -> Masukkan durasi baru (dalam hari dari sekarang):${NC} "
-    read duration
-    if ! [[ "$duration" =~ ^[0-9]+$ ]]; then
-        echo -e "\n${RED}Error: Durasi harus berupa angka.${NC}"
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
         sleep 2
         return
     fi
 
+    echo -n -e "${PROMPT_COLOR} -> Masukkan durasi baru (dalam hari dari sekarang):${NC} "
+    read duration
     new_expiry_timestamp=$(date -d "+$duration days" +%s)
 
     # Hapus field lama jika ada
@@ -577,23 +530,19 @@ edit_expiry() {
 
 # Fungsi untuk mengedit kata sandi
 edit_password() {
-    local username
-    username=$(select_user_by_number)
-    if [ $? -ne 0 ]; then
-        return
-    fi
-
     clear
-    echo -e "${YELLOW}--- Edit Password for: $username ---${NC}\n"
+    echo -e "${YELLOW}--- Edit Account Password ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
+    read username
 
-    echo -n -e "${PROMPT_COLOR} -> Masukkan password baru:${NC} "
-    read new_password
-
-    if [ -z "$new_password" ]; then
-        echo -e "\n${RED}Error: Password tidak boleh kosong.${NC}"
+    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
         sleep 2
         return
     fi
+
+    echo -n -e "${PROMPT_COLOR} -> Masukkan password baru:${NC} "
+    read new_password
 
     jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
