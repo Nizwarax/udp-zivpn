@@ -28,9 +28,17 @@ then
 fi
 
 # Meminta domain dari pengguna
-read -p "Masukkan nama domain Anda (contoh: domain.com): " user_domain
+YELLOW='\033[1;33m'
+WHITE='\033[1;37m'
+RED='\033[1;31m'
+NC='\033[0m'
+echo -e "${YELLOW}┌──────────────────────────────────────────┐${NC}"
+echo -e "${YELLOW}│   Silakan masukkan nama domain Anda      │${NC}"
+echo -e "${YELLOW}└──────────────────────────────────────────┘${NC}"
+echo -n -e "${WHITE}└──> ${NC}"
+read user_domain
 if [ -z "$user_domain" ]; then
-    echo "Nama domain tidak boleh kosong. Menggunakan hostname sebagai fallback."
+    echo -e "${RED}Nama domain tidak boleh kosong. Menggunakan hostname sebagai fallback.${NC}"
     user_domain=$(hostname)
 fi
 echo "Domain Anda akan disimpan sebagai: $user_domain"
