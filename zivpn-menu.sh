@@ -54,7 +54,7 @@ load_theme() {
         # If no config, default to lolcat if available
         THEME_CMD="lolcat"
         PROMPT_COLOR="$YELLOW"
-        echo "rainbow" > "$THEME_CONFIG" # Create the file with default
+        echo "rainbow" > /tmp/theme.tmp && sudo mv /tmp/theme.tmp "$THEME_CONFIG" # Create the file with default
     fi
 }
 
@@ -79,15 +79,26 @@ configure_theme() {
     echo -n -e "${PROMPT_COLOR} -> Pilihan Anda:${NC} "
     read choice
 
+    local theme_choice=""
     case $choice in
-        1) echo "rainbow" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Pelangi.${NC}" ;;
-        2) echo "red" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Merah.${NC}" ;;
-        3) echo "green" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Hijau.${NC}" ;;
-        4) echo "yellow" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Kuning.${NC}" ;;
-        5) echo "blue" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Biru.${NC}" ;;
-        6) echo "none" > "$THEME_CONFIG" && echo -e "${GREEN}Warna tema dinonaktifkan.${NC}" ;;
-        *) echo -e "${RED}Pilihan tidak valid.${NC}" ;;
+        1) theme_choice="rainbow" ;;
+        2) theme_choice="red" ;;
+        3) theme_choice="green" ;;
+        4) theme_choice="yellow" ;;
+        5) theme_choice="blue" ;;
+        6) theme_choice="none" ;;
+        *) echo -e "${RED}Pilihan tidak valid.${NC}"; sleep 2; return ;;
     esac
+
+    # Write to a temporary file and then use sudo to move it
+    tmp_file=$(mktemp)
+    echo "$theme_choice" > "$tmp_file"
+    if sudo mv "$tmp_file" "$THEME_CONFIG"; then
+        echo -e "${GREEN}Tema berhasil diatur.${NC}"
+    else
+        echo -e "${RED}Gagal menyimpan pengaturan tema.${NC}"
+        rm -f "$tmp_file"
+    fi
 
     # Reload the theme immediately
     load_theme
@@ -106,21 +117,26 @@ backup_restore() {
     case $choice in
         1)
             backup_file="/root/zivpn_backup_$(date +%Y-%m-%d).tar.gz"
-            tar -czf "$backup_file" -C /etc/zivpn .
-            echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
-
-            # Send the backup to Telegram
-            caption="Zivpn Backup - $(date +'%Y-%m-%d %H:%M:%S')"
-            send_document "$backup_file" "$caption"
-            echo -e "${GREEN}Backup file sent to Telegram.${NC}"
+            if sudo tar -czf "$backup_file" -C /etc/zivpn .; then
+                echo -e "${GREEN}Backup created successfully at $backup_file${NC}"
+                # Send the backup to Telegram
+                caption="Zivpn Backup - $(date +'%Y-%m-%d %H:%M:%S')"
+                send_document "$backup_file" "$caption"
+                echo -e "${GREEN}Backup file sent to Telegram.${NC}"
+            else
+                echo -e "${RED}Gagal membuat backup. Periksa izin.${NC}"
+            fi
             ;;
         2)
             echo -n -e "${PROMPT_COLOR} -> Masukkan path lengkap ke file backup:${NC} "
             read backup_file
             if [ -f "$backup_file" ]; then
-                tar -xzf "$backup_file" -C /etc/zivpn
-                echo -e "${GREEN}Restore successful. Restarting service...${NC}"
-                sync_config
+                if sudo tar -xzf "$backup_file" -C /etc/zivpn; then
+                    echo -e "${GREEN}Restore successful. Restarting service...${NC}"
+                    sync_config
+                else
+                    echo -e "${RED}Gagal melakukan restore. Periksa file backup dan izin.${NC}"
+                fi
             else
                 echo -e "${RED}Error: Backup file not found.${NC}"
             fi
@@ -207,12 +223,19 @@ configure_bot_settings() {
         CHAT_ID="$new_chat_id"
     fi
 
-    # Simpan konfigurasi ke file
-    echo "#!/bin/bash" > "$BOT_CONFIG"
-    echo "BOT_TOKEN='${BOT_TOKEN}'" >> "$BOT_CONFIG"
-    echo "CHAT_ID='${CHAT_ID}'" >> "$BOT_CONFIG"
+    # Simpan konfigurasi ke file sementara
+    tmp_file=$(mktemp)
+    echo "#!/bin/bash" > "$tmp_file"
+    echo "BOT_TOKEN='${BOT_TOKEN}'" >> "$tmp_file"
+    echo "CHAT_ID='${CHAT_ID}'" >> "$tmp_file"
 
-    echo -e "\n${GREEN}Pengaturan bot berhasil disimpan di $BOT_CONFIG${NC}"
+    # Pindahkan file sementara ke lokasi akhir dengan sudo
+    if sudo mv "$tmp_file" "$BOT_CONFIG"; then
+        echo -e "\n${GREEN}Pengaturan bot berhasil disimpan di $BOT_CONFIG${NC}"
+    else
+        echo -e "\n${RED}Gagal menyimpan pengaturan bot. Periksa izin.${NC}"
+        rm -f "$tmp_file"
+    fi
     sleep 2
 }
 
@@ -234,8 +257,14 @@ edit_domain() {
         return
     fi
 
-    echo "$new_domain" > "$DOMAIN_CONFIG"
-    echo -e "\n${GREEN}Domain berhasil diperbarui menjadi: $new_domain${NC}"
+    tmp_file=$(mktemp)
+    echo "$new_domain" > "$tmp_file"
+    if sudo mv "$tmp_file" "$DOMAIN_CONFIG"; then
+        echo -e "\n${GREEN}Domain berhasil diperbarui menjadi: $new_domain${NC}"
+    else
+        echo -e "\n${RED}Gagal memperbarui domain. Periksa izin.${NC}"
+        rm -f "$tmp_file"
+    fi
     sleep 2
 }
 
@@ -295,7 +324,14 @@ sync_config() {
 
     # Perbarui file konfigurasi utama dengan array kata sandi yang baru
     # Gunakan --argjson untuk memasukkan array JSON dengan aman
-    jq --argjson passwords "$passwords_json" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    tmp_file=$(mktemp)
+    if jq --argjson passwords "$passwords_json" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$tmp_file"; then
+        sudo mv "$tmp_file" "$CONFIG_FILE"
+    else
+        echo -e "${RED}Gagal memproses file JSON.${NC}"
+        rm -f "$tmp_file"
+        return 1 # Menandakan kegagalan
+    fi
 
     # Muat ulang dan restart layanan untuk menerapkan perubahan
     sudo systemctl daemon-reload
@@ -326,7 +362,15 @@ add_account() {
     new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --argjson expiry "$expiry_timestamp" \
         '{username: $user, password: $pass, expiry_timestamp: $expiry}')
 
-    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    tmp_file=$(mktemp)
+    if jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$tmp_file"; then
+        sudo mv "$tmp_file" "$USER_DB"
+    else
+        echo -e "\n${RED}Gagal menambahkan pengguna ke database. Periksa file JSON.${NC}"
+        rm -f "$tmp_file"
+        sleep 2
+        return
+    fi
 
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
@@ -394,7 +438,15 @@ add_trial_account() {
     new_user_json=$(jq -n --arg user "$username" --arg pass "$password" --argjson expiry "$expiry_timestamp" \
         '{username: $user, password: $pass, expiry_timestamp: $expiry}')
 
-    jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+    tmp_file=$(mktemp)
+    if jq --argjson new_user "$new_user_json" '. += [$new_user]' "$USER_DB" > "$tmp_file"; then
+        sudo mv "$tmp_file" "$USER_DB"
+    else
+        echo -e "\n${RED}Gagal menambahkan pengguna trial ke database. Periksa file JSON.${NC}"
+        rm -f "$tmp_file"
+        sleep 2
+        return
+    fi
 
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
@@ -529,9 +581,15 @@ delete_account() {
     echo -n -e "${PROMPT_COLOR}Anda yakin ingin menghapus akun '$username'? [y/N]:${NC} "
     read confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-        echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
-        sync_config
+        tmp_file=$(mktemp)
+        if jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$tmp_file"; then
+            sudo mv "$tmp_file" "$USER_DB"
+            echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
+            sync_config
+        else
+            echo -e "\n${RED}Gagal memproses penghapusan. Periksa file JSON.${NC}"
+            rm -f "$tmp_file"
+        fi
     else
         echo -e "\n${YELLOW}Penghapusan dibatalkan.${NC}"
     fi
@@ -560,11 +618,16 @@ edit_expiry() {
     new_expiry_timestamp=$(date -d "+$duration days" +%s)
 
     # Hapus field lama jika ada
-    jq --arg user "$username" --argjson new_expiry "$new_expiry_timestamp" \
+    tmp_file=$(mktemp)
+    if jq --arg user "$username" --argjson new_expiry "$new_expiry_timestamp" \
        '(.[] | select(.username == $user) | .expiry_timestamp) = $new_expiry | del(.[] | select(.username == $user) | .expiry_date)' \
-       "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-
-    echo -e "\n${GREEN}Tanggal kedaluwarsa untuk '$username' berhasil diperbarui.${NC}"
+       "$USER_DB" > "$tmp_file"; then
+        sudo mv "$tmp_file" "$USER_DB"
+        echo -e "\n${GREEN}Tanggal kedaluwarsa untuk '$username' berhasil diperbarui.${NC}"
+    else
+        echo -e "\n${RED}Gagal memperbarui tanggal kedaluwarsa. Periksa file JSON.${NC}"
+        rm -f "$tmp_file"
+    fi
     sleep 2
 }
 
@@ -588,10 +651,15 @@ edit_password() {
         return
     fi
 
-    jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-
-    echo -e "\n${GREEN}Password untuk '$username' telah diperbarui.${NC}"
-    sync_config
+    tmp_file=$(mktemp)
+    if jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) = $new_pass' "$USER_DB" > "$tmp_file"; then
+        sudo mv "$tmp_file" "$USER_DB"
+        echo -e "\n${GREEN}Password untuk '$username' telah diperbarui.${NC}"
+        sync_config
+    else
+        echo -e "\n${RED}Gagal memperbarui password. Periksa file JSON.${NC}"
+        rm -f "$tmp_file"
+    fi
     sleep 2
 }
 
