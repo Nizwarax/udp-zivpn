@@ -308,6 +308,7 @@ add_account() {
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "$IP_ADDRESS")
+    ISP=$(curl -s ipinfo.io/org)
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y')
@@ -319,6 +320,7 @@ add_account() {
         echo -e "${WHITE}Password  : $password${NC}"
         echo -e "${WHITE}HOST      : $DOMAIN${NC}"
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+        echo -e "${WHITE}ISP       : $ISP${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
     ) | eval "$THEME_CMD"
@@ -331,6 +333,7 @@ add_account() {
     message+="<b>Password</b>  : <code>${password}</code>%0A"
     message+="<b>HOST</b>      : <code>${DOMAIN}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="<b>ISP</b>       : <code>${ISP}</code>%0A"
     message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} HARI</code>%0A"
     message+="────────────────────%0A"
     message+="Note: Auto notif from your script..."
@@ -373,6 +376,7 @@ add_trial_account() {
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "$IP_ADDRESS")
+    ISP=$(curl -s ipinfo.io/org)
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y %H:%M')
@@ -384,6 +388,7 @@ add_trial_account() {
         echo -e "${WHITE}Password  : $password${NC}"
         echo -e "${WHITE}HOST      : $DOMAIN${NC}"
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
+        echo -e "${WHITE}ISP       : $ISP${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
     ) | eval "$THEME_CMD"
@@ -396,6 +401,7 @@ add_trial_account() {
     message+="<b>Password</b>  : <code>${password}</code>%0A"
     message+="<b>HOST</b>      : <code>${DOMAIN}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
+    message+="<b>ISP</b>       : <code>${ISP}</code>%0A"
     message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} MENIT</code>%0A"
     message+="────────────────────%0A"
     message+="Note: Auto notif from your script..."
@@ -567,6 +573,7 @@ show_menu() {
     # Get Server Info
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
     DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "Not Set")
+    ISP=$(curl -s ipinfo.io/org)
     RAM_USAGE=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
     CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}')
     DISK_USAGE=$(df -h / | awk 'NR==2{print $5}')
@@ -574,7 +581,9 @@ show_menu() {
     (
     figlet -f slant "ZIVPN"
     echo "==========================================================="
-    echo " ZIVPN ADVANCED MANAGER | Host: $DOMAIN ($IP_ADDRESS)"
+    echo " Host : $DOMAIN"
+    echo " IP   : $IP_ADDRESS"
+    echo " ISP  : $ISP"
     echo "==========================================================="
     echo " Info Server: [ CPU: $CPU_USAGE | RAM: $RAM_USAGE | Disk: $DISK_USAGE ]"
     echo "-----------------------------------------------------------"
