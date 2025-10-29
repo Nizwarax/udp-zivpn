@@ -1,5 +1,6 @@
 #!/bin/bash
 
+clear
 # Check for lolcat
 if command -v lolcat &> /dev/null; then
     LOLCAT="lolcat"
