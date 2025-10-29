@@ -27,6 +27,15 @@ then
     sudo apt-get install curl -y
 fi
 
+# Meminta domain dari pengguna
+read -p "Masukkan nama domain Anda (contoh: domain.com): " user_domain
+if [ -z "$user_domain" ]; then
+    echo "Nama domain tidak boleh kosong. Menggunakan hostname sebagai fallback."
+    user_domain=$(hostname)
+fi
+echo "Domain Anda akan disimpan sebagai: $user_domain"
+sleep 2
+
 if ! command -v figlet &> /dev/null; then
     echo "figlet not found, installing..."
     sudo apt-get install -y figlet
@@ -73,9 +82,10 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF'
 
-# Buat file database pengguna awal dan file konfigurasi tema
+# Buat file database pengguna awal, file tema, dan file domain
 sudo bash -c 'echo "[]" > /etc/zivpn/users.db.json'
 sudo bash -c 'echo "rainbow" > /etc/zivpn/theme.conf'
+sudo bash -c "echo \"$user_domain\" > /etc/zivpn/domain.conf"
 
 # Bersihin iptables rules yang lama
 INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
@@ -104,8 +114,14 @@ sudo wget -O /usr/local/bin/zivpn-cleanup.sh https://raw.githubusercontent.com/N
 sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
 sudo wget -O /usr/local/bin/zivpn-autobackup.sh https://raw.githubusercontent.com/wibuidc/zivpn-udp/main/zivpn-autobackup.sh
 sudo chmod +x /usr/local/bin/zivpn-autobackup.sh
+# Pasang skrip pemantauan server
+sudo wget -O /usr/local/bin/zivpn-monitor.sh https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main/zivpn-monitor.sh
+sudo chmod +x /usr/local/bin/zivpn-monitor.sh
+
 # Jalankan setiap menit untuk penghapusan yang mendekati real-time
 sudo bash -c 'echo "* * * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.d/zivpn-cleanup'
+# Jalankan pemantauan server setiap 5 menit
+sudo bash -c 'echo "*/5 * * * * root /usr/local/bin/zivpn-monitor.sh" > /etc/cron.d/zivpn-monitor'
 
 # Get Public IP
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')

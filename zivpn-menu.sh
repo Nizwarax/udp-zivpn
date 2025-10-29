@@ -279,6 +279,7 @@ add_account() {
 
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+    DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "$IP_ADDRESS")
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y')
@@ -288,6 +289,7 @@ add_account() {
         echo -e "${YELLOW}────────────────────${NC}"
         echo -e "${WHITE}User      : $username${NC}"
         echo -e "${WHITE}Password  : $password${NC}"
+        echo -e "${WHITE}HOST      : $DOMAIN${NC}"
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration HARI${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
@@ -299,6 +301,7 @@ add_account() {
     message+="────────────────────%0A"
     message+="<b>User</b>      : <code>${username}</code>%0A"
     message+="<b>Password</b>  : <code>${password}</code>%0A"
+    message+="<b>HOST</b>      : <code>${DOMAIN}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
     message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} HARI</code>%0A"
     message+="────────────────────%0A"
@@ -339,6 +342,7 @@ add_trial_account() {
 
     # Tampilkan detail di terminal dan kirim notifikasi
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+    DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "$IP_ADDRESS")
 
     # Format untuk terminal
     expiry_date_only=$(date -d "@$expiry_timestamp" '+%d-%m-%Y %H:%M')
@@ -348,6 +352,7 @@ add_trial_account() {
         echo -e "${YELLOW}────────────────────${NC}"
         echo -e "${WHITE}User      : $username${NC}"
         echo -e "${WHITE}Password  : $password${NC}"
+        echo -e "${WHITE}HOST      : $DOMAIN${NC}"
         echo -e "${WHITE}IP VPS    : $IP_ADDRESS${NC}"
         echo -e "${WHITE}EXP       : $expiry_date_only / $duration MENIT${NC}"
         echo -e "${YELLOW}────────────────────${NC}"
@@ -359,6 +364,7 @@ add_trial_account() {
     message+="────────────────────%0A"
     message+="<b>User</b>      : <code>${username}</code>%0A"
     message+="<b>Password</b>  : <code>${password}</code>%0A"
+    message+="<b>HOST</b>      : <code>${DOMAIN}</code>%0A"
     message+="<b>IP VPS</b>    : <code>${IP_ADDRESS}</code>%0A"
     message+="<b>EXP</b>       : <code>${expiry_date_only} / ${duration} MENIT</code>%0A"
     message+="────────────────────%0A"
@@ -517,34 +523,43 @@ manage_auto_backup() {
     fi
 }
 
-# --- Tampilan Menu Utama ---
+# --- Tampilan Menu Utama (Redesigned) ---
 show_menu() {
     clear
-    (
-    figlet -f standard "ZIVPN"
-    echo "    ZIVPN MANAGER - v2.0 (Advanced)"
-    echo "=========================================="
+
+    # Get Server Info
     IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
-    echo "🌍 Public IP Address: < $IP_ADDRESS >"
-    echo "<<< === === === === === === === >>>"
-    # Menggunakan format printf untuk perataan yang konsisten
-    printf "[%2d] ➕  Add Regular Account\n" 1
-    printf "[%2d] ⏳  Add Trial Account\n" 2
-    printf "[%2d] 📄  List Accounts\n" 3
-    printf "[%2d] 🗑️  Delete Account\n" 4
-    printf "[%2d] 📅  Edit Expiry Date\n" 5
-    printf "[%2d] 🔑  Edit Password\n" 6
-    printf "[%2d] 🖥️  VPS Info\n" 7
-    echo "<<< ... ... ... >>>"
-    printf "[%2d] 💾  Full Backup/Restore\n" 8
-    printf "[%2d] 🤖  Atur Notifikasi Bot\n" 9
-    printf "[%2d] 🎨  Pengaturan Tema\n" 10
-    printf "[%2d] 🛡️  Pengaturan Cadangan Otomatis\n" 11
-    printf "[%2d] ❌  Uninstall ZIVPN\n" 12
-    printf "[%2d] 🚪  Exit\n" 0
-    echo ""
+    DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "Not Set")
+    RAM_USAGE=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
+    CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}')
+    DISK_USAGE=$(df -h / | awk 'NR==2{print $5}')
+
+    (
+    figlet -f slant "ZIVPN"
+    echo "==========================================================="
+    echo " ZIVPN ADVANCED MANAGER | Host: $DOMAIN ($IP_ADDRESS)"
+    echo "==========================================================="
+    echo " Info Server: [ CPU: $CPU_USAGE | RAM: $RAM_USAGE | Disk: $DISK_USAGE ]"
+    echo "-----------------------------------------------------------"
+
+    # --- Menu Options ---
+    # Left Column
+    printf " [%02d] Add Regular    | [%02d] List Accounts\n" 1 3
+    printf " [%02d] Add Trial      | [%02d] Delete Account\n" 2 4
+    echo " -------------------- | --------------------"
+    printf " [%02d] Edit Expiry    | [%02d] VPS Info\n" 5 7
+    printf " [%02d] Edit Password  |\n" 6
+    echo "-----------------------------------------------------------"
+    echo " :: PENGATURAN & UTILITAS ::"
+    echo "-----------------------------------------------------------"
+    printf " [%02d] Backup/Restore | [%02d] Auto Backup\n" 8 11
+    printf " [%02d] Bot Settings   | [%02d] Uninstall\n" 9 12
+    printf " [%02d] Theme Settings |\n" 10
+    echo "-----------------------------------------------------------"
+    printf " [%02d] Exit\n" 0
+    echo "==========================================================="
     ) | eval "$THEME_CMD"
-    echo -n -e "${WHITE}//_-> Choose an option: ${NC}"
+    echo -n -e "${WHITE} -> Masukkan pilihan Anda: ${NC}"
 }
 
 
