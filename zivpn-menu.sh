@@ -477,10 +477,19 @@ list_accounts() {
     echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
+# --- Helper function to display a simple user list ---
+list_users_simple() {
+    echo -e "${YELLOW}--- Daftar Pengguna ---${NC}"
+    jq -r '.[].username' "$USER_DB" | nl -w2 -s'. '
+    echo "-----------------------"
+}
+
+
 # Fungsi untuk menghapus akun
 delete_account() {
     clear
     echo -e "${YELLOW}--- Delete Account ---${NC}\n"
+    list_users_simple
     echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan dihapus:${NC} "
     read username
 
@@ -500,6 +509,7 @@ delete_account() {
 edit_expiry() {
     clear
     echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}\n"
+    list_users_simple
     echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
     read username
 
@@ -526,6 +536,7 @@ edit_expiry() {
 edit_password() {
     clear
     echo -e "${YELLOW}--- Edit Account Password ---${NC}\n"
+    list_users_simple
     echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
     read username
 
