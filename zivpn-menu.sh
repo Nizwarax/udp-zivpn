@@ -665,19 +665,17 @@ show_menu() {
     echo "-----------------------------------------------------------"
 
     # --- Menu Options ---
-    # Left Column
-    printf " [%02d] Add Regular    | [%02d] List Accounts\n" 1 3
-    printf " [%02d] Add Trial      | [%02d] Delete Account\n" 2 4
+    printf " [%02d] Add Regular    | [%02d] Delete Account\n" 1 4
+    printf " [%02d] Add Trial      | [%02d] Edit Expiry\n" 2 5
+    printf " [%02d] List Accounts  | [%02d] Edit Password\n" 3 6
     echo " -------------------- | --------------------"
-    printf " [%02d] Edit Expiry    | [%02d] VPS Info\n" 5 7
-    printf " [%02d] Edit Password  |\n" 6
+    printf " [%02d] VPS Info       |\n" 7
     echo "-----------------------------------------------------------"
     echo " :: PENGATURAN & UTILITAS ::"
     echo "-----------------------------------------------------------"
-    printf " [%02d] Backup/Restore | [%02d] Auto Backup\n" 8 12
-    printf " [%02d] Bot Settings   | [%02d] Uninstall\n" 9 13
-    printf " [%02d] Theme Settings |\n" 10
-    printf " [%02d] Edit Domain    |\n" 11
+    printf " [%02d] Backup/Restore | [%02d] Edit Domain\n" 8 11
+    printf " [%02d] Bot Settings   | [%02d] Auto Backup\n" 9 12
+    printf " [%02d] Theme Settings | [%02d] Uninstall\n" 10 13
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
