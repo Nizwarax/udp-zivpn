@@ -13,7 +13,8 @@ NC='\033[0m'
 
 # --- Theme Configuration ---
 THEME_CONFIG="/etc/zivpn/theme.conf"
-THEME_CMD="cat" # Default value
+THEME_CMD="cat" # Default value for main output
+PROMPT_COLOR="$YELLOW" # Default prompt color
 
 # Function to load the theme
 load_theme() {
@@ -21,22 +22,38 @@ load_theme() {
         THEME=$(cat "$THEME_CONFIG")
         case $THEME in
             rainbow)
-                if command -v lolcat &> /dev/null; then
-                    THEME_CMD="lolcat"
-                else
-                    THEME_CMD="cat" # Fallback if lolcat is not installed
-                fi
+                if command -v lolcat &> /dev/null; then THEME_CMD="lolcat"; else THEME_CMD="cat"; fi
+                PROMPT_COLOR="$YELLOW" # Rainbow theme uses a consistent yellow prompt
                 ;;
-            red) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $RED)/\" -e \"s/$/$(echo -e $NC)/\"";;
-            green) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $GREEN)/\" -e \"s/$/$(echo -e $NC)/\"";;
-            yellow) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $YELLOW)/\" -e \"s/$/$(echo -e $NC)/\"";;
-            blue) THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $BLUE)/\" -e \"s/$/$(echo -e $NC)/\"";;
-            none) THEME_CMD="cat";;
-            *) THEME_CMD="cat";; # Default to no color if invalid value
+            red)
+                THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $RED)/\" -e \"s/$/$(echo -e $NC)/\""
+                PROMPT_COLOR="$RED"
+                ;;
+            green)
+                THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $GREEN)/\" -e \"s/$/$(echo -e $NC)/\""
+                PROMPT_COLOR="$GREEN"
+                ;;
+            yellow)
+                THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $YELLOW)/\" -e \"s/$/$(echo -e $NC)/\""
+                PROMPT_COLOR="$YELLOW"
+                ;;
+            blue)
+                THEME_CMD="sed 's/\\x1b\\[[0-9;]*m//g' | sed -e \"s/^/$(echo -e $BLUE)/\" -e \"s/$/$(echo -e $NC)/\""
+                PROMPT_COLOR="$BLUE"
+                ;;
+            none)
+                THEME_CMD="cat"
+                PROMPT_COLOR="$WHITE"
+                ;;
+            *)
+                THEME_CMD="cat"
+                PROMPT_COLOR="$YELLOW"
+                ;;
         esac
     elif command -v lolcat &> /dev/null; then
         # If no config, default to lolcat if available
         THEME_CMD="lolcat"
+        PROMPT_COLOR="$YELLOW"
         echo "rainbow" > "$THEME_CONFIG" # Create the file with default
     fi
 }
@@ -47,17 +64,20 @@ load_theme
 # --- Theme Configuration Menu ---
 configure_theme() {
     clear
-    echo -e "${YELLOW}--- Pengaturan Tampilan Tema ---${NC}"
-    echo -e "${WHITE}Pilih gaya warna untuk tampilan menu:${NC}"
+    (
+        echo "--- Pengaturan Tampilan Tema ---"
+        echo "Pilih gaya warna untuk tampilan menu:"
+        echo ""
+        printf "[%2d] 🌈 Pelangi (lolcat)\n" 1
+        printf "[%2d] ❤️ Merah\n" 2
+        printf "[%2d] 💚 Hijau\n" 3
+        printf "[%2d] 💛 Kuning\n" 4
+        printf "[%2d] 💙 Biru\n" 5
+        printf "[%2d]  plain Tanpa Warna\n" 6
+    ) | eval "$THEME_CMD"
     echo ""
-    printf "[%2d] 🌈 Pelangi (lolcat)\n" 1
-    printf "[%2d] ❤️ Merah\n" 2
-    printf "[%2d] 💚 Hijau\n" 3
-    printf "[%2d] 💛 Kuning\n" 4
-    printf "[%2d] 💙 Biru\n" 5
-    printf "[%2d]  plain Tanpa Warna\n" 6
-    echo ""
-    read -p "Pilih opsi: " choice
+    echo -n -e "${PROMPT_COLOR} -> Pilihan Anda:${NC} "
+    read choice
 
     case $choice in
         1) echo "rainbow" > "$THEME_CONFIG" && echo -e "${GREEN}Tema diatur ke Pelangi.${NC}" ;;
@@ -80,7 +100,8 @@ backup_restore() {
     echo -e "${YELLOW}--- Full Backup/Restore ---${NC}"
     echo -e "${WHITE}1. Create Backup${NC}"
     echo -e "${WHITE}2. Restore from Local File${NC}"
-    read -p "Choose an option: " choice
+    echo -n -e "\n${PROMPT_COLOR} -> Pilihan Anda:${NC} "
+    read choice
 
     case $choice in
         1)
@@ -94,7 +115,8 @@ backup_restore() {
             echo -e "${GREEN}Backup file sent to Telegram.${NC}"
             ;;
         2)
-            read -p "Enter the full path to the backup file: " backup_file
+            echo -n -e "${PROMPT_COLOR} -> Masukkan path lengkap ke file backup:${NC} "
+            read backup_file
             if [ -f "$backup_file" ]; then
                 tar -xzf "$backup_file" -C /etc/zivpn
                 echo -e "${GREEN}Restore successful. Restarting service...${NC}"
@@ -107,7 +129,7 @@ backup_restore() {
             echo -e "${RED}Invalid option.${NC}"
             ;;
     esac
-    read -p "Press [Enter] to continue..."
+    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
 # Fungsi untuk info VPS
@@ -124,7 +146,7 @@ vps_info() {
         echo -e "${WHITE}RAM: $(free -h | grep Mem | awk '{print $2}')${NC}"
         echo -e "${WHITE}Disk: $(df -h / | tail -n 1 | awk '{print $2}')${NC}"
     ) | eval "$THEME_CMD"
-    read -p "Press [Enter] to continue..."
+    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
 # Fungsi untuk uninstall interaktif
@@ -141,7 +163,8 @@ interactive_uninstall() {
         return
     fi
 
-    read -p "Anda yakin ingin uninstall ZIVPN? [y/N]: " confirm
+    echo -n -e "${PROMPT_COLOR}Anda yakin ingin uninstall ZIVPN? [y/N]:${NC} "
+    read confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${WHITE}Memulai proses uninstall...${NC}"
         # Jalankan skrip dari path absolutnya
@@ -168,16 +191,18 @@ configure_bot_settings() {
     fi
 
     echo -e "${YELLOW}--- Konfigurasi Notifikasi Bot Telegram ---${NC}"
-    echo -e "${WHITE}Masukkan detail bot Anda. Biarkan kosong untuk tidak mengubah nilai saat ini.${NC}"
+    echo -e "${WHITE}Masukkan detail bot Anda. Biarkan kosong untuk tidak mengubah nilai saat ini.${NC}\n"
 
     # Minta Bot Token
-    read -p "Masukkan Bot Token Anda [saat ini: ${BOT_TOKEN:-'tidak diatur'}]: " new_token
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Bot Token [saat ini: ${BOT_TOKEN:-'tidak diatur'}]:${NC} "
+    read new_token
     if [ -n "$new_token" ]; then
         BOT_TOKEN="$new_token"
     fi
 
     # Minta Chat ID
-    read -p "Masukkan Chat ID Anda [saat ini: ${CHAT_ID:-'tidak diatur'}]: " new_chat_id
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Chat ID [saat ini: ${CHAT_ID:-'tidak diatur'}]:${NC} "
+    read new_chat_id
     if [ -n "$new_chat_id" ]; then
         CHAT_ID="$new_chat_id"
     fi
@@ -187,7 +212,7 @@ configure_bot_settings() {
     echo "BOT_TOKEN='${BOT_TOKEN}'" >> "$BOT_CONFIG"
     echo "CHAT_ID='${CHAT_ID}'" >> "$BOT_CONFIG"
 
-    echo -e "${GREEN}Pengaturan bot berhasil disimpan di $BOT_CONFIG${NC}"
+    echo -e "\n${GREEN}Pengaturan bot berhasil disimpan di $BOT_CONFIG${NC}"
     sleep 2
 }
 
@@ -257,16 +282,19 @@ sync_config() {
 # Fungsi untuk menambahkan akun reguler
 add_account() {
     clear
-    echo -e "${YELLOW}--- Add Regular Account ---${NC}"
-    read -p "Enter username: " username
+    echo -e "${YELLOW}--- Add Regular Account ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Username:${NC} "
+    read username
     if jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' already exists.${NC}"
+        echo -e "\n${RED}Error: Username '$username' already exists.${NC}"
         sleep 2
         return
     fi
 
-    read -p "Enter password: " password
-    read -p "Enter duration (in days, default: 30): " duration
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Password:${NC} "
+    read password
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Durasi (hari, default: 30):${NC} "
+    read duration
     [[ -z "$duration" ]] && duration=30
 
     expiry_timestamp=$(date -d "+$duration days" +%s)
@@ -316,20 +344,22 @@ add_account() {
 # Fungsi untuk menambahkan akun trial
 add_trial_account() {
     clear
-    echo -e "${YELLOW}--- Add Trial Account ---${NC}"
-    read -p "Enter username (e.g., trial-user): " username
-    if jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' already exists.${NC}"
+    echo -e "${YELLOW}--- Add Trial Account ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Username (kosongkan untuk acak):${NC} "
+    read username
+    if [[ -n "$username" ]] && jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
+        echo -e "\n${RED}Error: Username '$username' already exists.${NC}"
         sleep 2
         return
     fi
     [[ -z "$username" ]] && username="trial-$(date +%s)"
 
-
-    read -p "Enter password (or leave empty for random): " password
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Password (kosongkan untuk acak):${NC} "
+    read password
     [[ -z "$password" ]] && password=$(head -c 8 /dev/urandom | base64)
 
-    read -p "Enter duration (in minutes, default: 60): " duration
+    echo -n -e "${PROMPT_COLOR} -> Masukkan Durasi (menit, default: 60):${NC} "
+    read duration
     [[ -z "$duration" ]] && duration=60
 
     expiry_timestamp=$(date -d "+$duration minutes" +%s)
@@ -415,23 +445,24 @@ list_accounts() {
 
         echo -e "${BLUE}-------------------------------------------------------------------${NC}"
     ) | eval "$THEME_CMD"
-    read -p "Press [Enter] to continue..."
+    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
 # Fungsi untuk menghapus akun
 delete_account() {
     clear
-    echo -e "${YELLOW}--- Delete Account ---${NC}"
-    read -p "Enter username to delete: " username
+    echo -e "${YELLOW}--- Delete Account ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan dihapus:${NC} "
+    read username
 
     if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
         sleep 2
         return
     fi
 
     jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-    echo -e "${GREEN}Account '$username' deleted successfully.${NC}"
+    echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
     sync_config
     sleep 2
 }
@@ -439,16 +470,18 @@ delete_account() {
 # Fungsi untuk mengedit tanggal kedaluwarsa
 edit_expiry() {
     clear
-    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}"
-    read -p "Enter username to edit: " username
+    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
+    read username
 
     if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
         sleep 2
         return
     fi
 
-    read -p "Enter new duration (in days from today): " duration
+    echo -n -e "${PROMPT_COLOR} -> Masukkan durasi baru (dalam hari dari sekarang):${NC} "
+    read duration
     new_expiry_timestamp=$(date -d "+$duration days" +%s)
 
     # Hapus field lama jika ada
@@ -456,27 +489,29 @@ edit_expiry() {
        '(.[] | select(.username == $user) | .expiry_timestamp) = $new_expiry | del(.[] | select(.username == $user) | .expiry_date)' \
        "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
-    echo -e "${GREEN}Expiry date for '$username' updated.${NC}"
+    echo -e "\n${GREEN}Tanggal kedaluwarsa untuk '$username' berhasil diperbarui.${NC}"
     sleep 2
 }
 
 # Fungsi untuk mengedit kata sandi
 edit_password() {
     clear
-    echo -e "${YELLOW}--- Edit Account Password ---${NC}"
-    read -p "Enter username to edit: " username
+    echo -e "${YELLOW}--- Edit Account Password ---${NC}\n"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
+    read username
 
     if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "${RED}Error: Username '$username' not found.${NC}"
+        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
         sleep 2
         return
     fi
 
-    read -p "Enter new password: " new_password
+    echo -n -e "${PROMPT_COLOR} -> Masukkan password baru:${NC} "
+    read new_password
 
     jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
-    echo -e "${GREEN}Password for '$username' has been updated.${NC}"
+    echo -e "\n${GREEN}Password untuk '$username' telah diperbarui.${NC}"
     sync_config
     sleep 2
 }
@@ -494,7 +529,8 @@ manage_auto_backup() {
         echo ""
         echo -e "${WHITE}1. Nonaktifkan Cadangan Otomatis${NC}"
         echo -e "${WHITE}2. Kembali ke Menu Utama${NC}"
-        read -p "Pilih opsi: " choice
+        echo -n -e "\n${PROMPT_COLOR} -> Pilihan Anda:${NC} "
+        read choice
         case $choice in
             1)
                 sudo rm "$CRON_FILE"
@@ -509,7 +545,8 @@ manage_auto_backup() {
         echo ""
         echo -e "${WHITE}1. Aktifkan Cadangan Otomatis (Setiap hari jam 00:00)${NC}"
         echo -e "${WHITE}2. Kembali ke Menu Utama${NC}"
-        read -p "Pilih opsi: " choice
+        echo -n -e "\n${PROMPT_COLOR} -> Pilihan Anda:${NC} "
+        read choice
         case $choice in
             1)
                 # Tulis cron job ke file dengan sudo
@@ -559,14 +596,14 @@ show_menu() {
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
     ) | eval "$THEME_CMD"
-    echo -n -e "${WHITE} -> Masukkan pilihan Anda: ${NC}"
+    echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
+    read -r choice
 }
 
 
 # Loop utama
 while true; do
     show_menu
-    read -r choice
     case $choice in
         1) add_account ;;
         2) add_trial_account ;;
