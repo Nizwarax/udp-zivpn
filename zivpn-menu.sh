@@ -408,7 +408,7 @@ add_account() {
     send_notification "$message"
 
     sync_config
-    read -p "Press [Enter] to continue..."
+    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
 # Fungsi untuk menambahkan akun trial
@@ -484,7 +484,7 @@ add_trial_account() {
     send_notification "$message"
 
     sync_config
-    read -p "Press [Enter] to continue..."
+    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
 
@@ -581,6 +581,7 @@ delete_account() {
     echo -n -e "${PROMPT_COLOR}Anda yakin ingin menghapus akun '$username'? [y/N]:${NC} "
     read confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
+
         tmp_file=$(mktemp)
         if jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$tmp_file"; then
             sudo mv "$tmp_file" "$USER_DB"
@@ -590,10 +591,11 @@ delete_account() {
             echo -e "\n${RED}Gagal memproses penghapusan. Periksa file JSON.${NC}"
             rm -f "$tmp_file"
         fi
+
     else
         echo -e "\n${YELLOW}Penghapusan dibatalkan.${NC}"
+        sleep 2
     fi
-    sleep 2
 }
 
 # Fungsi untuk mengedit tanggal kedaluwarsa
