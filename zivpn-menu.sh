@@ -61,6 +61,12 @@ load_theme() {
 # Load the theme at the start of the script
 load_theme
 
+# --- Global Server Info (fetch once) ---
+IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "Not Set")
+ISP=$(curl -s ipinfo.io/org || echo "Unknown")
+
+
 # --- Theme Configuration Menu ---
 configure_theme() {
     clear
@@ -477,50 +483,87 @@ list_accounts() {
     echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
 }
 
-# --- Helper function to display a simple user list ---
-list_users_simple() {
-    echo -e "${YELLOW}--- Daftar Pengguna ---${NC}"
-    jq -r '.[].username' "$USER_DB" | nl -w2 -s'. '
-    echo "-----------------------"
+# --- Helper function to select a user by number ---
+select_user_by_number() {
+    clear
+    echo -e "${YELLOW}--- Pilih Akun ---${NC}\n"
+
+    # Read users into a bash array
+    mapfile -t users < <(jq -r '.[].username' "$USER_DB")
+
+    if [ ${#users[@]} -eq 0 ]; then
+        echo -e "${RED}Tidak ada akun yang ditemukan.${NC}"
+        sleep 2
+        return 1
+    fi
+
+    # Display users in a numbered list
+    for i in "${!users[@]}"; do
+        printf " [%2d] %s\n" "$((i+1))" "${users[$i]}"
+    done
+    echo ""
+
+    # Prompt user to select a number
+    local choice
+    while true; do
+        echo -n -e "${PROMPT_COLOR} -> Masukkan nomor akun (atau 0 untuk batal):${NC} "
+        read choice
+        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#users[@]} ]; then
+            # This is the critical part: we return the selected username to the caller
+            echo "${users[$((choice-1))]}"
+            return 0
+        elif [[ "$choice" == "0" ]]; then
+            return 1
+        else
+            echo -e "${RED}Pilihan tidak valid. Silakan coba lagi.${NC}"
+        fi
+    done
 }
 
 
 # Fungsi untuk menghapus akun
 delete_account() {
-    clear
-    echo -e "${YELLOW}--- Delete Account ---${NC}\n"
-    list_users_simple
-    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan dihapus:${NC} "
-    read username
-
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
-        sleep 2
+    local username
+    username=$(select_user_by_number)
+    if [ $? -ne 0 ]; then
         return
     fi
 
-    jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
-    echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
-    sync_config
-    sleep 2
+    clear
+    echo -e "${YELLOW}--- Delete Account: $username ---${NC}\n"
+
+    echo -n -e "${PROMPT_COLOR}Anda yakin ingin menghapus akun '$username'? [y/N]:${NC} "
+    read confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        jq --arg user "$username" 'del(.[] | select(.username == $user))' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
+        echo -e "\n${GREEN}Akun '$username' berhasil dihapus.${NC}"
+        sync_config
+        sleep 2
+    else
+        echo -e "\n${YELLOW}Penghapusan dibatalkan.${NC}"
+        sleep 2
+    fi
 }
 
 # Fungsi untuk mengedit tanggal kedaluwarsa
 edit_expiry() {
-    clear
-    echo -e "${YELLOW}--- Edit Account Expiry Date ---${NC}\n"
-    list_users_simple
-    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
-    read username
+    local username
+    username=$(select_user_by_number)
+    if [ $? -ne 0 ]; then
+        return
+    fi
 
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
+    clear
+    echo -e "${YELLOW}--- Edit Expiry for: $username ---${NC}\n"
+
+    echo -n -e "${PROMPT_COLOR} -> Masukkan durasi baru (dalam hari dari sekarang):${NC} "
+    read duration
+    if ! [[ "$duration" =~ ^[0-9]+$ ]]; then
+        echo -e "\n${RED}Error: Durasi harus berupa angka.${NC}"
         sleep 2
         return
     fi
 
-    echo -n -e "${PROMPT_COLOR} -> Masukkan durasi baru (dalam hari dari sekarang):${NC} "
-    read duration
     new_expiry_timestamp=$(date -d "+$duration days" +%s)
 
     # Hapus field lama jika ada
@@ -534,20 +577,23 @@ edit_expiry() {
 
 # Fungsi untuk mengedit kata sandi
 edit_password() {
-    clear
-    echo -e "${YELLOW}--- Edit Account Password ---${NC}\n"
-    list_users_simple
-    echo -n -e "${PROMPT_COLOR} -> Masukkan username yang akan diedit:${NC} "
-    read username
-
-    if ! jq -e --arg user "$username" '.[] | select(.username == $user)' "$USER_DB" > /dev/null; then
-        echo -e "\n${RED}Error: Username '$username' not found.${NC}"
-        sleep 2
+    local username
+    username=$(select_user_by_number)
+    if [ $? -ne 0 ]; then
         return
     fi
 
+    clear
+    echo -e "${YELLOW}--- Edit Password for: $username ---${NC}\n"
+
     echo -n -e "${PROMPT_COLOR} -> Masukkan password baru:${NC} "
     read new_password
+
+    if [ -z "$new_password" ]; then
+        echo -e "\n${RED}Error: Password tidak boleh kosong.${NC}"
+        sleep 2
+        return
+    fi
 
     jq --arg user "$username" --arg new_pass "$new_password" '(.[] | select(.username == $user) | .password) |= $new_pass' "$USER_DB" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
@@ -604,10 +650,7 @@ manage_auto_backup() {
 show_menu() {
     clear
 
-    # Get Server Info
-    IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
-    DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "Not Set")
-    ISP=$(curl -s ipinfo.io/org)
+    # Get dynamic info
     TOTAL_ACCOUNTS=$(jq 'length' "$USER_DB")
     RAM_USAGE=$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')
     CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}')
