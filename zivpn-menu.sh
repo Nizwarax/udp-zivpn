@@ -216,6 +216,29 @@ configure_bot_settings() {
     sleep 2
 }
 
+# Fungsi untuk mengedit domain
+edit_domain() {
+    clear
+    DOMAIN_CONFIG="/etc/zivpn/domain.conf"
+    CURRENT_DOMAIN=$(cat "$DOMAIN_CONFIG" 2>/dev/null || echo "Belum diatur")
+
+    echo -e "${YELLOW}--- Edit Domain Server ---${NC}"
+    echo -e "${WHITE}Domain saat ini adalah: ${GREEN}$CURRENT_DOMAIN${NC}\n"
+
+    echo -n -e "${PROMPT_COLOR} -> Masukkan domain baru:${NC} "
+    read new_domain
+
+    if [ -z "$new_domain" ]; then
+        echo -e "\n${RED}Error: Domain tidak boleh kosong.${NC}"
+        sleep 2
+        return
+    fi
+
+    echo "$new_domain" > "$DOMAIN_CONFIG"
+    echo -e "\n${GREEN}Domain berhasil diperbarui menjadi: $new_domain${NC}"
+    sleep 2
+}
+
 # Fungsi untuk mengirim notifikasi ke Telegram
 send_notification() {
     local message="$1"
@@ -651,9 +674,10 @@ show_menu() {
     echo "-----------------------------------------------------------"
     echo " :: PENGATURAN & UTILITAS ::"
     echo "-----------------------------------------------------------"
-    printf " [%02d] Backup/Restore | [%02d] Auto Backup\n" 8 11
-    printf " [%02d] Bot Settings   | [%02d] Uninstall\n" 9 12
+    printf " [%02d] Backup/Restore | [%02d] Auto Backup\n" 8 12
+    printf " [%02d] Bot Settings   | [%02d] Uninstall\n" 9 13
     printf " [%02d] Theme Settings |\n" 10
+    printf " [%02d] Edit Domain    |\n" 11
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
@@ -677,8 +701,9 @@ while true; do
         8) backup_restore ;;
         9) configure_bot_settings ;;
         10) configure_theme ;;
-        11) manage_auto_backup ;;
-        12) interactive_uninstall ;;
+        11) edit_domain ;;
+        12) manage_auto_backup ;;
+        13) interactive_uninstall ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
