@@ -73,6 +73,16 @@
         .copy-button:active {
             background-color: #27ae60;
         }
+        .license-notice {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .license-notice strong {
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
@@ -82,7 +92,7 @@
 
         <h2>✨ Fitur Utama</h2>
         <ul>
-            <li><strong>Instalasi Otomatis</strong>: Cukup jalankan satu perintah untuk menginstal layanan Zivpn, dependensi, dan semua skrip manajemen.</li>
+            <li><strong>Instalasi Otomatis & Aman</strong>: Skrip instalasi dilindungi dan memerlukan lisensi IP untuk berjalan.</li>
             <li><strong>Menu Interaktif</strong>: Antarmuka berbasis menu yang mudah digunakan untuk mengelola pengguna, melihat informasi, dan lainnya.</li>
             <li><strong>Manajemen Pengguna Lengkap</strong>: Tambah, hapus, dan lihat pengguna reguler dan percobaan langsung dari menu.</li>
             <li><strong>Pembersihan Otomatis</strong>: Pengguna yang kedaluwarsa secara otomatis dihapus.</li>
@@ -91,8 +101,14 @@
             <li><strong>Dukungan Multi-Arsitektur</strong>: Bekerja pada server AMD64 (x86_64) dan ARM64.</li>
         </ul>
 
+        <h2>🔒 Sistem Lisensi</h2>
+        <div class="license-notice">
+            <strong>Penting:</strong> Skrip instalasi ini sekarang dilindungi oleh sistem lisensi berbasis IP. Agar instalasi berhasil, IP publik dari server target <strong>harus</strong> didaftarkan terlebih dahulu di dalam file <code>izin_ips.txt</code> yang Anda hosting di <code>http://zivpn.nizwara.biz.id/izin_ips.txt</code>.<br><br>
+            Jika IP server tidak terdaftar, proses instalasi akan gagal.
+        </div>
+
         <h2>🚀 Instalasi</h2>
-        <p>Untuk menginstal, cukup salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.</p>
+        <p>Untuk menginstal, pastikan IP server sudah terdaftar, lalu salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.</p>
 
         <h3>AMD64 (x86_64)</h3>
         <pre><button class="copy-button" onclick="copyToClipboard(this)">Salin</button><code>wget -q -O zi.sh http://zivpn.nizwara.biz.id/zi.sh && chmod +x zi.sh && ./zi.sh</code></pre>

@@ -4,7 +4,7 @@ Selamat datang di Skrip Manajemen Zivpn UDP! Alat ini dirancang untuk menyederha
 
 ## ✨ Fitur Utama
 
-- **Instalasi Otomatis**: Cukup jalankan satu perintah untuk menginstal layanan Zivpn, dependensi, dan semua skrip manajemen.
+- **Instalasi Otomatis & Aman**: Skrip instalasi dilindungi dan memerlukan lisensi IP untuk berjalan.
 - **Menu Interaktif**: Antarmuka berbasis menu yang mudah digunakan untuk mengelola pengguna, melihat informasi, dan lainnya.
 - **Manajemen Pengguna Lengkap**: Tambah, hapus, dan lihat pengguna reguler dan percobaan langsung dari menu.
 - **Pembersihan Otomatis**: Pengguna yang kedaluwarsa secara otomatis dihapus.
@@ -12,9 +12,15 @@ Selamat datang di Skrip Manajemen Zivpn UDP! Alat ini dirancang untuk menyederha
 - **Uninstaller Lengkap**: Satu perintah untuk menghapus Zivpn dan semua komponennya dari sistem Anda.
 - **Dukungan Multi-Arsitektur**: Bekerja pada server AMD64 (x86_64) dan ARM64.
 
+## 🔒 Sistem Lisensi
+
+**Penting:** Skrip instalasi ini sekarang dilindungi oleh sistem lisensi berbasis IP. Agar instalasi berhasil, IP publik dari server target **harus** didaftarkan terlebih dahulu di dalam file `izin_ips.txt` yang Anda hosting di `http://zivpn.nizwara.biz.id/izin_ips.txt`.
+
+Jika IP server tidak terdaftar, proses instalasi akan gagal.
+
 ## 🚀 Instalasi
 
-Untuk menginstal, cukup salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.
+Untuk menginstal, pastikan IP server sudah terdaftar, lalu salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.
 
 ### AMD64 (x86_64)
 ```bash
