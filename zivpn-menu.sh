@@ -88,7 +88,7 @@ display_license_info_content() {
             fi
         fi
 
-        printf " License To : %-15s Expiry : %s\n" "$CLIENT_NAME" "$remaining_display"
+        printf " License To : %-15s      Expiry : %s\n" "$CLIENT_NAME" "$remaining_display"
         printf " Build By   : @Dark_System2x        Partner: @wibuvpn\n"
         echo "==========================================================="
     fi
