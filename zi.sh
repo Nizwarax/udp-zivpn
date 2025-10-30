@@ -1,9 +1,148 @@
 #!/bin/bash
-# Zivpn Installer (Protected)
-echo "Initializing secure installer..."
-B64_DATA=$(cat <<'EOF'
-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
-EOF
-)
-eval "$(echo "$B64_DATA" | base64 -d | bzip2 -d)"
-exit 0
+# Zivpn UDP Module installer - Fixed
+# Creator Deki_niswara
+
+# Fix for sudo: unable to resolve host
+HOSTNAME=$(hostname)
+if ! grep -q "127.0.0.1 $HOSTNAME" /etc/hosts; then
+    echo "Adding $HOSTNAME to /etc/hosts"
+    sudo bash -c "echo '127.0.0.1 $HOSTNAME' >> /etc/hosts"
+fi
+
+echo -e "Updating server"
+sudo apt-get update && sudo apt-get upgrade -y
+if ! command -v ufw &> /dev/null
+then
+    echo "ufw could not be found, installing it now..."
+    sudo apt-get install ufw -y
+fi
+if ! command -v jq &> /dev/null
+then
+    echo "jq could not be found, installing it now..."
+    sudo apt-get install jq -y
+fi
+if ! command -v curl &> /dev/null
+then
+    echo "curl could not be found, installing it now..."
+    sudo apt-get install curl -y
+fi
+
+# Meminta domain dari pengguna
+YELLOW='\033[1;33m'
+WHITE='\033[1;37m'
+RED='\033[1;31m'
+NC='\033[0m'
+echo -e "${YELLOW}┌──────────────────────────────────────────┐${NC}"
+echo -e "${YELLOW}│   Silakan masukkan nama domain Anda      │${NC}"
+echo -e "${YELLOW}└──────────────────────────────────────────┘${NC}"
+echo -n -e "${WHITE}└──> ${NC}"
+read user_domain
+if [ -z "$user_domain" ]; then
+    echo -e "${RED}Nama domain tidak boleh kosong. Menggunakan hostname sebagai fallback.${NC}"
+    user_domain=$(hostname)
+fi
+echo "Domain Anda akan disimpan sebagai: $user_domain"
+sleep 2
+
+if ! command -v figlet &> /dev/null; then
+    echo "figlet not found, installing..."
+    sudo apt-get install -y figlet
+fi
+
+if ! command -v lolcat &> /dev/null; then
+    echo "lolcat not found, installing..."
+    sudo apt-get install -y ruby-full
+    sudo gem install lolcat
+fi
+
+
+# Stop service kalau ada
+sudo systemctl stop zivpn.service > /dev/null 2>&1
+
+echo -e "Downloading UDP Service"
+sudo wget https://zivpn.nizwara.biz.id/udp-zivpn-linux-amd64 -O /usr/local/bin/zivpn-bin
+sudo chmod +x /usr/local/bin/zivpn-bin
+sudo mkdir -p /etc/zivpn
+sudo wget https://zivpn.nizwara.biz.id/config.json -O /etc/zivpn/config.json
+
+echo "Generating cert files:"
+sudo openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=California/L=Los Angeles/O=Example Corp/OU=IT Department/CN=zivpn" -keyout "/etc/zivpn/zivpn.key" -out "/etc/zivpn/zivpn.crt"
+sudo sysctl -w net.core.rmem_max=16777216 > /dev/null
+sudo sysctl -w net.core.wmem_max=16777216 > /dev/null
+
+sudo bash -c 'cat <<EOF > /etc/systemd/system/zivpn.service
+[Unit]
+Description=zivpn VPN Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/etc/zivpn
+ExecStart=/usr/local/bin/zivpn-bin server -c /etc/zivpn/config.json
+Restart=always
+RestartSec=3
+Environment=ZIVPN_LOG_LEVEL=info
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+# Buat file database pengguna awal, file tema, dan file domain
+sudo bash -c 'echo "[]" > /etc/zivpn/users.db.json'
+sudo bash -c 'echo "rainbow" > /etc/zivpn/theme.conf'
+sudo bash -c "echo \"$user_domain\" > /etc/zivpn/domain.conf"
+
+# Bersihin iptables rules yang lama
+INTERFACE=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+while sudo iptables -t nat -D PREROUTING -i $INTERFACE -p udp --dport 6000:19999 -j DNAT --to-destination :5667 2>/dev/null; do :; done
+sudo iptables -t nat -A PREROUTING -i $INTERFACE -p udp --dport 6000:19999 -j DNAT --to-destination :5667
+sudo iptables -A FORWARD -p udp -d 127.0.0.1 --dport 5667 -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -s 127.0.0.1/32 -o $INTERFACE -j MASQUERADE
+sudo apt install iptables-persistent -y -qq
+sudo netfilter-persistent save > /dev/null
+
+sudo systemctl daemon-reload
+sudo systemctl enable zivpn.service
+sudo systemctl start zivpn.service
+sudo ufw allow 6000:19999/udp > /dev/null
+sudo ufw allow 5667/udp > /dev/null
+
+sudo wget -O /usr/local/bin/zivpn https://zivpn.nizwara.biz.id/zivpn-menu.sh
+sudo chmod +x /usr/local/bin/zivpn
+
+# Unduh skrip uninstall dan letakkan di path yang dapat diakses
+sudo wget -O /usr/local/bin/uninstall.sh https://zivpn.nizwara.biz.id/uninstall.sh
+sudo chmod +x /usr/local/bin/uninstall.sh
+
+# Pasang skrip pembersihan otomatis dan jadwalkan
+sudo wget -O /usr/local/bin/zivpn-cleanup.sh https://zivpn.nizwara.biz.id/zivpn-cleanup.sh
+sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
+sudo wget -O /usr/local/bin/zivpn-autobackup.sh https://zivpn.nizwara.biz.id/zivpn-autobackup.sh
+sudo chmod +x /usr/local/bin/zivpn-autobackup.sh
+# Pasang skrip pemantauan server
+sudo wget -O /usr/local/bin/zivpn-monitor.sh https://zivpn.nizwara.biz.id/zivpn-monitor.sh
+sudo chmod +x /usr/local/bin/zivpn-monitor.sh
+
+# Jalankan setiap menit untuk penghapusan yang mendekati real-time
+sudo bash -c 'echo "* * * * * root /usr/local/bin/zivpn-cleanup.sh" > /etc/cron.d/zivpn-cleanup'
+# Jalankan pemantauan server setiap 5 menit
+sudo bash -c 'echo "*/5 * * * * root /usr/local/bin/zivpn-monitor.sh" > /etc/cron.d/zivpn-monitor'
+
+# Pasang skrip MOTD (Message of the Day)
+sudo wget -O /etc/profile.d/zivpn-motd.sh https://zivpn.nizwara.biz.id/zivpn-motd.sh
+sudo chmod +x /etc/profile.d/zivpn-motd.sh
+
+# Pesan Selesai Instalasi
+clear
+echo -e "\n${GREEN}============================================${NC}"
+echo -e "      ✅ ${WHITE}Instalasi ZIVPN Selesai!${NC} ✅"
+echo -e "${GREEN}============================================${NC}"
+echo -e "${WHITE}Untuk membuka menu, ketik:${NC} ${YELLOW}zivpn${NC}"
+echo -e "${WHITE}Pesan selamat datang akan muncul setiap kali Anda login.${NC}\n"
+
+# Cleanup
+rm -f zi.sh* zi-fixed.sh* > /dev/null 2>&1

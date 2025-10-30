@@ -1,8 +1,0 @@
-# Daftar IP yang diizinkan untuk menginstal skrip Zivpn.
-# Tambahkan satu alamat IP per baris.
-# Contoh:
-# 192.168.1.1
-# 10.0.0.5
-
-127.0.0.1
-8.8.8.8
