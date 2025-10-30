@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 USER_DB="/etc/zivpn/users.db.json"
 CONFIG_FILE="/etc/zivpn/config.json"
