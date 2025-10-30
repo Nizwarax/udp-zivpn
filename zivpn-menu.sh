@@ -719,6 +719,78 @@ check_cpu_ram() {
     "$GOTOP_SCRIPT"
 }
 
+# --- Service Management Menu ---
+manage_service() {
+    while true; do
+        clear
+        # Get the latest status
+        SERVICE_STATUS=$(sudo systemctl is-active zivpn.service)
+        if [[ "$SERVICE_STATUS" == "active" ]]; then
+            STATUS_DISPLAY="${GREEN}● Aktif${NC}"
+        else
+            STATUS_DISPLAY="${RED}● Tidak Aktif${NC}"
+        fi
+
+        (
+            echo "──────────────────────────────────────"
+            echo "           MANAJEMEN LAYANAN"
+            echo "──────────────────────────────────────"
+            echo -e " Status Layanan: $STATUS_DISPLAY"
+            echo "--------------------------------------"
+            printf " [%02d] Mulai Layanan Zivpn\n" 1
+            printf " [%02d] Hentikan Layanan Zivpn\n" 2
+            printf " [%02d] Mulai Ulang Layanan Zivpn\n" 3
+            printf " [%02d] Lihat Status Layanan\n" 4
+            echo "--------------------------------------"
+            printf " [%02d] Kembali ke Menu Utama\n" 0
+            echo "──────────────────────────────────────"
+        ) | eval "$THEME_CMD"
+        echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
+        read -r choice
+
+        case $choice in
+            1)
+                clear
+                echo -e "${YELLOW}Memulai layanan Zivpn...${NC}"
+                sudo systemctl start zivpn.service
+                sleep 1
+                echo -e "${GREEN}Layanan Zivpn telah dimulai.${NC}"
+                echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
+                ;;
+            2)
+                clear
+                echo -e "${YELLOW}Menghentikan layanan Zivpn...${NC}"
+                sudo systemctl stop zivpn.service
+                sleep 1
+                echo -e "${GREEN}Layanan Zivpn telah dihentikan.${NC}"
+                echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
+                ;;
+            3)
+                clear
+                echo -e "${YELLOW}Memulai ulang layanan Zivpn...${NC}"
+                sudo systemctl restart zivpn.service
+                sleep 1
+                echo -e "${GREEN}Layanan Zivpn telah dimulai ulang.${NC}"
+                echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
+                ;;
+            4)
+                clear
+                echo -e "${YELLOW}--- Status Layanan Zivpn ---${NC}"
+                sudo systemctl status zivpn.service
+                echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk melanjutkan...${NC}"; read
+                ;;
+            0)
+                return
+                ;;
+            *)
+                clear
+                echo -e "${RED}Pilihan tidak valid, silakan coba lagi.${NC}"
+                sleep 2
+                ;;
+        esac
+    done
+}
+
 # --- Update Script Function ---
 update_script() {
     clear
@@ -825,7 +897,7 @@ show_menu() {
     printf " [%02d] Theme Settings | [%02d] Uninstall\n" 10 13
     echo " -------------------- | --------------------"
     printf " [%02d] Bandwidth      | [%02d] Cek CPU/RAM\n" 14 15
-    printf " [%02d] Update Script  |\n" 16
+    printf " [%02d] Update Script  | [%02d] Kelola Layanan\n" 16 17
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
@@ -855,6 +927,7 @@ while true; do
         14) bandwidth_menu ;;
         15) check_cpu_ram ;;
         16) update_script ;;
+        17) manage_service ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
