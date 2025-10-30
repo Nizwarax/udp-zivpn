@@ -629,7 +629,7 @@ bandwidth_menu() {
             echo "──────────────────────────────────────"
             echo "           BANDWITH MONITOR"
             echo "──────────────────────────────────────"
-            printf " [%02d] View Total Remaining Bandwidth\n" 1
+            printf " [%02d] View Total Usage Summary\n" 1
             printf " [%02d] View Usage Table Every 5 Minutes\n" 2
             printf " [%02d] View Usage Table Every Hour\n" 3
             printf " [%02d] View Usage Table Every Day\n" 4
@@ -649,7 +649,7 @@ bandwidth_menu() {
         case $choice in
             1)
                 clear
-                echo -e "\n${YELLOW}This feature is not supported by vnstat.${NC}"
+                vnstat
                 ;;
             2)
                 clear
