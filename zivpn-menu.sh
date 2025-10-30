@@ -719,6 +719,76 @@ check_cpu_ram() {
     "$GOTOP_SCRIPT"
 }
 
+# --- Update Script Function ---
+update_script() {
+    clear
+    echo -e "${YELLOW}--- Update ZIVPN Scripts ---${NC}"
+    echo -e "${WHITE}This will download the latest versions of the scripts and binary without deleting your user data.${NC}"
+    echo -n -e "${PROMPT_COLOR}Are you sure you want to continue? [y/N]:${NC} "
+    read confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${GREEN}Update cancelled.${NC}"
+        sleep 2
+        return
+    fi
+
+    echo -e "\n${WHITE}Updating... Please wait.${NC}"
+
+    # --- Configuration ---
+    REPO_URL="https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main"
+    # Assuming the release version might get updated, but for now, this is the latest known one.
+    RELEASE_URL="https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9"
+
+    # --- Detect Architecture ---
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "x86_64" ]]; then
+        BINARY_NAME="udp-zivpn-linux-amd64"
+    elif [[ "$ARCH" == "aarch64" ]]; then
+        BINARY_NAME="udp-zivpn-linux-arm64"
+    else
+        echo -e "${RED}Error: Unsupported architecture '$ARCH'. Update aborted.${NC}"
+        sleep 3
+        return
+    fi
+
+    # --- Stop Service ---
+    echo "Stopping Zivpn service..."
+    sudo systemctl stop zivpn.service > /dev/null 2>&1
+
+    # --- Update Files ---
+    echo "Downloading latest scripts and binary..."
+    # Update binary
+    sudo wget -q -O /usr/local/bin/zivpn-bin "$RELEASE_URL/$BINARY_NAME"
+    # Update scripts
+    sudo wget -q -O /usr/local/bin/zivpn "$REPO_URL/zivpn-menu.sh"
+    sudo wget -q -O /usr/local/bin/uninstall.sh "$REPO_URL/uninstall.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-cleanup.sh "$REPO_URL/zivpn-cleanup.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-autobackup.sh "$REPO_URL/zivpn-autobackup.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-monitor.sh "$REPO_URL/zivpn-monitor.sh"
+    sudo wget -q -O /etc/profile.d/zivpn-motd.sh "$REPO_URL/zivpn-motd.sh"
+
+    # --- Set Permissions ---
+    echo "Setting permissions..."
+    sudo chmod +x /usr/local/bin/zivpn-bin
+    sudo chmod +x /usr/local/bin/zivpn
+    sudo chmod +x /usr/local/bin/uninstall.sh
+    sudo chmod +x /usr/local/bin/zivpn-cleanup.sh
+    sudo chmod +x /usr/local/bin/zivpn-autobackup.sh
+    sudo chmod +x /usr/local/bin/zivpn-monitor.sh
+    sudo chmod +x /etc/profile.d/zivpn-motd.sh
+
+    # --- Restart Service ---
+    echo "Restarting Zivpn service..."
+    sudo systemctl start zivpn.service > /dev/null 2>&1
+
+    echo -e "\n${GREEN}✔ Update complete!${NC}"
+    echo -e "${WHITE}The menu will now restart to apply changes.${NC}"
+    sleep 3
+
+    # Restart the menu script
+    exec /usr/local/bin/zivpn
+}
+
 # --- Tampilan Menu Utama (Redesigned) ---
 show_menu() {
     clear
@@ -755,6 +825,7 @@ show_menu() {
     printf " [%02d] Theme Settings | [%02d] Uninstall\n" 10 13
     echo " -------------------- | --------------------"
     printf " [%02d] Bandwidth      | [%02d] Cek CPU/RAM\n" 14 15
+    printf " [%02d] Update Script  |\n" 16
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
@@ -783,6 +854,7 @@ while true; do
         13) interactive_uninstall ;;
         14) bandwidth_menu ;;
         15) check_cpu_ram ;;
+        16) update_script ;;
         0) exit 0 ;;
         *)
             echo -e "${RED}Invalid option, please try again.${NC}"
