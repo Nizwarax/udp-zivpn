@@ -61,6 +61,46 @@ load_theme() {
 # Load the theme at the start of the script
 load_theme
 
+display_license_info() {
+    local BORDER_COLOR='\033[38;5;42m'
+    local LABEL_COLOR='\033[38;5;82m'
+    local CLIENT_COLOR='\033[38;5;214m'
+    local VALUE_COLOR='\033[1;37m'
+    local NC='\033[0m'
+    local LICENSE_FILE="/etc/zivpn/license.conf"
+
+    if [ -f "$LICENSE_FILE" ]; then
+        source "$LICENSE_FILE" &> /dev/null
+
+        local title="Script License"
+        local remaining_display
+
+        if [[ "$EXPIRY_DATE" == "lifetime" ]]; then
+            remaining_display="Lifetime"
+        else
+            local expiry_seconds=$(date -d "$EXPIRY_DATE" +%s 2>/dev/null)
+            if [[ -z "$expiry_seconds" ]]; then
+                remaining_display="Invalid Date"
+            else
+                local current_seconds=$(date +%s)
+                if [ "$current_seconds" -gt "$expiry_seconds" ]; then
+                    title="Script Expired"
+                    remaining_display="0 Days"
+                else
+                    local remaining_seconds=$((expiry_seconds - current_seconds))
+                    local remaining_days=$((remaining_seconds / 86400))
+                    remaining_display="$remaining_days Days"
+                fi
+            fi
+        fi
+
+        printf "${BORDER_COLOR} ┌─[🔲 ${VALUE_COLOR}%-16s${BORDER_COLOR} 🔲]─┐${NC}\n" "$title"
+        printf "${BORDER_COLOR} │ ${LABEL_COLOR}↘ Client : ${CLIENT_COLOR}%-25s ${BORDER_COLOR}│${NC}\n" "$CLIENT_NAME"
+        printf "${BORDER_COLOR} │ ${LABEL_COLOR}↘ Versi  : ${VALUE_COLOR}v5.3 LTS  ${BORDER_COLOR}| ${LABEL_COLOR}Expiry : ${VALUE_COLOR}%-10s ${BORDER_COLOR}│${NC}\n" "$remaining_display"
+        printf "${BORDER_COLOR} └──────────────────────────────────────────┘${NC}\n"
+    fi
+}
+
 # --- Global Server Info (fetch once) ---
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
 DOMAIN=$(cat /etc/zivpn/domain.conf 2>/dev/null || echo "Not Set")
@@ -872,6 +912,7 @@ show_menu() {
     DISK_USAGE=$(df -h / | awk 'NR==2{print $5}')
 
     (
+    display_license_info
     figlet -f slant "ZIVPN"
     echo "==========================================================="
     echo " Host : $DOMAIN"

@@ -2,6 +2,48 @@
 # Zivpn UDP Module installer - Fixed for x86_64 and password sync
 # Creator Deki_niswara
 
+# --- Validasi Lisensi ---
+IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
+SERVER_IP=$(curl -s ifconfig.me)
+
+# Periksa apakah pengambilan IP berhasil
+if [ -z "$SERVER_IP" ]; then
+    echo "Gagal mendapatkan IP server. Silakan periksa koneksi internet Anda."
+    exit 1
+fi
+
+# Unduh daftar IP yang diizinkan
+IZIN_IPS=$(curl -s "$IZIN_URL")
+MATCHING_LINE=$(echo "$IZIN_IPS" | grep -w "$SERVER_IP")
+
+if [ -z "$MATCHING_LINE" ]; then
+    echo "Akses ditolak. IP Anda ($SERVER_IP) tidak terdaftar."
+    exit 1
+fi
+
+# Ekstrak informasi dari baris yang cocok
+CLIENT_NAME=$(echo "$MATCHING_LINE" | awk '{for(i=2;i<=NF-2;i++) printf $i " "; print ""}' | sed 's/ $//')
+EXPIRY_DATE=$(echo "$MATCHING_LINE" | awk '{print $(NF-1)}')
+
+# Validasi tanggal kedaluwarsa
+if [[ "$EXPIRY_DATE" != "lifetime" ]]; then
+    EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s)
+    CURRENT_SECONDS=$(date +%s)
+
+    if [ "$CURRENT_SECONDS" -gt "$EXPIRY_SECONDS" ]; then
+        echo "Lisensi untuk klien '$CLIENT_NAME' telah kedaluwarsa pada $EXPIRY_DATE."
+        exit 1
+    fi
+fi
+
+# Simpan informasi lisensi
+sudo mkdir -p /etc/zivpn
+echo "CLIENT_NAME=$CLIENT_NAME" > /etc/zivpn/license.conf
+echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
+echo "Lisensi valid untuk klien: $CLIENT_NAME, Kedaluwarsa: $EXPIRY_DATE"
+sleep 2
+# --- Akhir Validasi Lisensi ---
+
 # Fix for sudo: unable to resolve host
 HOSTNAME=$(hostname)
 if ! grep -q "127.0.0.1 $HOSTNAME" /etc/hosts; then
