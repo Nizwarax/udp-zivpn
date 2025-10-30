@@ -807,9 +807,7 @@ update_script() {
     echo -e "\n${WHITE}Updating... Please wait.${NC}"
 
     # --- Configuration ---
-    REPO_URL="https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main"
-    # Assuming the release version might get updated, but for now, this is the latest known one.
-    RELEASE_URL="https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9"
+    BASE_URL="https://zivpn.nizwara.biz.id"
 
     # --- Detect Architecture ---
     ARCH=$(uname -m)
@@ -830,14 +828,14 @@ update_script() {
     # --- Update Files ---
     echo "Downloading latest scripts and binary..."
     # Update binary
-    sudo wget -q -O /usr/local/bin/zivpn-bin "$RELEASE_URL/$BINARY_NAME"
+    sudo wget -q -O /usr/local/bin/zivpn-bin "$BASE_URL/$BINARY_NAME"
     # Update scripts
-    sudo wget -q -O /usr/local/bin/zivpn "$REPO_URL/zivpn-menu.sh"
-    sudo wget -q -O /usr/local/bin/uninstall.sh "$REPO_URL/uninstall.sh"
-    sudo wget -q -O /usr/local/bin/zivpn-cleanup.sh "$REPO_URL/zivpn-cleanup.sh"
-    sudo wget -q -O /usr/local/bin/zivpn-autobackup.sh "$REPO_URL/zivpn-autobackup.sh"
-    sudo wget -q -O /usr/local/bin/zivpn-monitor.sh "$REPO_URL/zivpn-monitor.sh"
-    sudo wget -q -O /etc/profile.d/zivpn-motd.sh "$REPO_URL/zivpn-motd.sh"
+    sudo wget -q -O /usr/local/bin/zivpn "$BASE_URL/zivpn-menu.sh"
+    sudo wget -q -O /usr/local/bin/uninstall.sh "$BASE_URL/uninstall.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-cleanup.sh "$BASE_URL/zivpn-cleanup.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-autobackup.sh "$BASE_URL/zivpn-autobackup.sh"
+    sudo wget -q -O /usr/local/bin/zivpn-monitor.sh "$BASE_URL/zivpn-monitor.sh"
+    sudo wget -q -O /etc/profile.d/zivpn-motd.sh "$BASE_URL/zivpn-motd.sh"
 
     # --- Set Permissions ---
     echo "Setting permissions..."
