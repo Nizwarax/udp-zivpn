@@ -912,7 +912,6 @@ show_menu() {
     DISK_USAGE=$(df -h / | awk 'NR==2{print $5}')
 
     (
-    display_license_info
     figlet -f slant "ZIVPN"
     echo "==========================================================="
     echo " Host : $DOMAIN"
@@ -943,6 +942,7 @@ show_menu() {
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
     ) | eval "$THEME_CMD"
+    display_license_info
     echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
     read -r choice
 }
