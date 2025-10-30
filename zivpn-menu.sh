@@ -745,7 +745,7 @@ show_menu() {
     printf " [%02d] Add Regular    | [%02d] Delete Account\n" 1 4
     printf " [%02d] Add Trial      | [%02d] Edit Expiry\n" 2 5
     printf " [%02d] List Accounts  | [%02d] Edit Password\n" 3 6
-    echo " -------------------- | --------------------"
+    echo " ------------------- | --------------------"
     printf " [%02d] VPS Info       |\n" 7
     echo "-----------------------------------------------------------"
     echo " :: PENGATURAN & UTILITAS ::"
@@ -753,7 +753,7 @@ show_menu() {
     printf " [%02d] Backup/Restore | [%02d] Edit Domain\n" 8 11
     printf " [%02d] Bot Settings   | [%02d] Auto Backup\n" 9 12
     printf " [%02d] Theme Settings | [%02d] Uninstall\n" 10 13
-    echo " -------------------- | --------------------"
+    echo " ------------------- | --------------------"
     printf " [%02d] Bandwidth      | [%02d] Cek CPU/RAM\n" 14 15
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
