@@ -111,7 +111,7 @@ sudo openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Ca
 sudo sysctl -w net.core.rmem_max=16777216 > /dev/null
 sudo sysctl -w net.core.wmem_max=16777216 > /dev/null
 
-sudo bash -c 'cat <<EOF > /etc/systemd/system/zivpn.service
+sudo tee /etc/systemd/system/zivpn.service > /dev/null <<EOF
 [Unit]
 Description=zivpn VPN Server
 After=network.target
@@ -130,7 +130,7 @@ NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF
 
 # Buat file database pengguna awal, file tema, dan file domain
 sudo bash -c 'echo "[]" > /etc/zivpn/users.db.json'
