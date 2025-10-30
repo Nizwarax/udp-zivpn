@@ -608,6 +608,7 @@ manage_auto_backup() {
 
 # --- Bandwidth Monitor Menu ---
 bandwidth_menu() {
+    # Check for vnstat once at the beginning
     if ! command -v vnstat &> /dev/null; then
         echo -e "${YELLOW}vnstat is not installed. Installing...${NC}"
         sudo apt-get update > /dev/null 2>&1
@@ -617,75 +618,87 @@ bandwidth_menu() {
             sleep 2
             return
         fi
-         # find the default network interface
+        # find the default network interface
         INTERFACE=$(ip -o -4 route show to default | awk '{print $5}')
         sudo vnstat -u -i ${INTERFACE}
     fi
 
-    clear
-    (
-        echo "──────────────────────────────────────"
-        echo "           BANDWITH MONITOR"
-        echo "──────────────────────────────────────"
-        printf " [%02d] View Total Remaining Bandwidth\n" 1
-        printf " [%02d] View Usage Table Every 5 Minutes\n" 2
-        printf " [%02d] View Usage Table Every Hour\n" 3
-        printf " [%02d] View Usage Table Every Day\n" 4
-        printf " [%02d] View Usage Table Every Month\n" 5
-        printf " [%02d] View Usage Table Every Year\n" 6
-        printf " [%02d] View Highest Usage Table\n" 7
-        printf " [%02d] Hourly Usage Statistics\n" 8
-        printf " [%02d] View Current Active Usage\n" 9
-        printf " [%02d] View Current Active Traffic Usage\n" 10
-        echo "──────────────────────────────────────"
-        echo " Input x or [ Ctrl+C ] • To-bw"
-        echo "──────────────────────────────────────"
-    ) | eval "$THEME_CMD"
-    echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
-    read -r choice
+    while true; do
+        clear
+        (
+            echo "──────────────────────────────────────"
+            echo "           BANDWITH MONITOR"
+            echo "──────────────────────────────────────"
+            printf " [%02d] View Total Remaining Bandwidth\n" 1
+            printf " [%02d] View Usage Table Every 5 Minutes\n" 2
+            printf " [%02d] View Usage Table Every Hour\n" 3
+            printf " [%02d] View Usage Table Every Day\n" 4
+            printf " [%02d] View Usage Table Every Month\n" 5
+            printf " [%02d] View Usage Table Every Year\n" 6
+            printf " [%02d] View Highest Usage Table\n" 7
+            printf " [%02d] Hourly Usage Statistics\n" 8
+            printf " [%02d] View Current Active Usage\n" 9
+            printf " [%02d] View Current Active Traffic Usage\n" 10
+            echo "──────────────────────────────────────"
+            echo " Input x or [ Ctrl+C ] • To-bw"
+            echo "──────────────────────────────────────"
+        ) | eval "$THEME_CMD"
+        echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
+        read -r choice
 
-    clear
-    case $choice in
-        1)
-            echo -e "\n${YELLOW}This feature is not supported by vnstat.${NC}"
-            ;;
-        2)
-            vnstat -5
-            ;;
-        3)
-            vnstat -h
-            ;;
-        4)
-            vnstat -d
-            ;;
-        5)
-            vnstat -m
-            ;;
-        6)
-            vnstat -y
-            ;;
-        7)
-            vnstat -t
-            ;;
-        8)
-            vnstat -h
-            ;;
-        9)
-            vnstat -l
-            ;;
-        10)
-            vnstat -tr
-            ;;
-        x)
-            return
-            ;;
-        *)
-            echo -e "${RED}Invalid option, please try again.${NC}"
-            sleep 2
-            return
-            ;;
-    esac
-    echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk kembali...${NC}"; read
+        case $choice in
+            1)
+                clear
+                echo -e "\n${YELLOW}This feature is not supported by vnstat.${NC}"
+                ;;
+            2)
+                clear
+                vnstat -5
+                ;;
+            3)
+                clear
+                vnstat -h
+                ;;
+            4)
+                clear
+                vnstat -d
+                ;;
+            5)
+                clear
+                vnstat -m
+                ;;
+            6)
+                clear
+                vnstat -y
+                ;;
+            7)
+                clear
+                vnstat -t
+                ;;
+            8)
+                clear
+                vnstat -h
+                ;;
+            9)
+                clear
+                vnstat -l
+                ;;
+            10)
+                clear
+                vnstat -tr
+                ;;
+            x)
+                return
+                ;;
+            *)
+                clear
+                echo -e "${RED}Invalid option, please try again.${NC}"
+                sleep 2
+                continue
+                ;;
+        esac
+        echo -n -e "\n${PROMPT_COLOR}Tekan [Enter] untuk kembali...${NC}"; read
+    done
 }
 
 # --- Check CPU & RAM ---
