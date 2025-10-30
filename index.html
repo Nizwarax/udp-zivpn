@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skrip Manajemen Zivpn UDP</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        h1 {
+            font-size: 2.5em;
+        }
+        h2 {
+            font-size: 2em;
+        }
+        h3 {
+            font-size: 1.5em;
+            border-bottom: none;
+        }
+        ul {
+            list-style-type: '✔ ';
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        pre {
+            background-color: #2d3436;
+            color: #dfe6e9;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            position: relative;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1em;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .copy-button:hover {
+            opacity: 1;
+        }
+        .copy-button:active {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Skrip Manajemen Zivpn UDP</h1>
+        <p>Selamat datang di Skrip Manajemen Zivpn UDP! Alat ini dirancang untuk menyederhanakan instalasi, konfigurasi, dan pengelolaan layanan Zivpn UDP di server Debian atau Ubuntu Anda.</p>
+
+        <h2>✨ Fitur Utama</h2>
+        <ul>
+            <li><strong>Instalasi Otomatis</strong>: Cukup jalankan satu perintah untuk menginstal layanan Zivpn, dependensi, dan semua skrip manajemen.</li>
+            <li><strong>Menu Interaktif</strong>: Antarmuka berbasis menu yang mudah digunakan untuk mengelola pengguna, melihat informasi, dan lainnya.</li>
+            <li><strong>Manajemen Pengguna Lengkap</strong>: Tambah, hapus, dan lihat pengguna reguler dan percobaan langsung dari menu.</li>
+            <li><strong>Pembersihan Otomatis</strong>: Pengguna yang kedaluwarsa secara otomatis dihapus.</li>
+            <li><strong>Penghapusan "Instan"</strong>: Akun yang kedaluwarsa (baik reguler maupun trial) akan dihapus secara otomatis dalam satu menit setelah waktunya habis.</li>
+            <li><strong>Uninstaller Lengkap</strong>: Satu perintah untuk menghapus Zivpn dan semua komponennya dari sistem Anda.</li>
+            <li><strong>Dukungan Multi-Arsitektur</strong>: Bekerja pada server AMD64 (x86_64) dan ARM64.</li>
+        </ul>
+
+        <h2>🚀 Instalasi</h2>
+        <p>Untuk menginstal, cukup salin dan jalankan perintah yang sesuai dengan arsitektur server Anda.</p>
+
+        <h3>AMD64 (x86_64)</h3>
+        <pre><button class="copy-button" onclick="copyToClipboard(this)">Salin</button><code>wget -q -O zi.sh http://zivpn.nizwara.biz.id/zi.sh && chmod +x zi.sh && ./zi.sh</code></pre>
+
+        <h3>ARM64</h3>
+        <pre><button class="copy-button" onclick="copyToClipboard(this)">Salin</button><code>wget -q -O zi2.sh http://zivpn.nizwara.biz.id/zi2.sh && chmod +x zi2.sh && ./zi2.sh</code></pre>
+
+        <h2>🛠️ Penggunaan</h2>
+        <p>Setelah instalasi selesai, Anda dapat mengakses menu manajemen kapan saja dengan menjalankan perintah berikut:</p>
+        <pre><button class="copy-button" onclick="copyToClipboard(this)">Salin</button><code>zivpn</code></pre>
+
+        <h2>🗑️ Uninstall</h2>
+        <p>Jika Anda ingin menghapus Zivpn dari server Anda, Anda dapat melakukannya melalui menu atau dengan menjalankan perintah berikut secara langsung:</p>
+        <pre><button class="copy-button" onclick="copyToClipboard(this)">Salin</button><code>uninstall.sh</code></pre>
+        <p>Skrip uninstal akan meminta konfirmasi sebelum menghapus semua file, layanan, dan aturan firewall yang terkait dengan Zivpn.</p>
+    </div>
+
+    <script>
+        function copyToClipboard(button) {
+            const pre = button.parentElement;
+            const code = pre.querySelector('code');
+            const text = code.innerText;
+
+            navigator.clipboard.writeText(text).then(() => {
+                button.innerText = 'Tersalin!';
+                setTimeout(() => {
+                    button.innerText = 'Salin';
+                }, 2000);
+            }).catch(err => {
+                console.error('Gagal menyalin teks: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

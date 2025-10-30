@@ -706,7 +706,7 @@ check_cpu_ram() {
     GOTOP_SCRIPT="/usr/local/bin/gotop"
     if [ ! -f "$GOTOP_SCRIPT" ]; then
         echo -e "${YELLOW}Downloading gotop script...${NC}"
-        wget -O "$GOTOP_SCRIPT" https://raw.githubusercontent.com/Nizwarax/gotop/main/gotop > /dev/null 2>&1
+        wget -O "$GOTOP_SCRIPT" http://zivpn.nizwara.biz.id/gotop > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo -e "${RED}Failed to download gotop script.${NC}"
             sleep 2
@@ -807,9 +807,7 @@ update_script() {
     echo -e "\n${WHITE}Updating... Please wait.${NC}"
 
     # --- Configuration ---
-    REPO_URL="https://raw.githubusercontent.com/Nizwarax/udp-zivpn/main"
-    # Assuming the release version might get updated, but for now, this is the latest known one.
-    RELEASE_URL="https://github.com/Nizwarax/udp-zivpn/releases/download/udp-zivpn_1.4.9"
+    REPO_URL="http://zivpn.nizwara.biz.id"
 
     # --- Detect Architecture ---
     ARCH=$(uname -m)
@@ -830,7 +828,7 @@ update_script() {
     # --- Update Files ---
     echo "Downloading latest scripts and binary..."
     # Update binary
-    sudo wget -q -O /usr/local/bin/zivpn-bin "$RELEASE_URL/$BINARY_NAME"
+    sudo wget -q -O /usr/local/bin/zivpn-bin "$REPO_URL/$BINARY_NAME"
     # Update scripts
     sudo wget -q -O /usr/local/bin/zivpn "$REPO_URL/zivpn-menu.sh"
     sudo wget -q -O /usr/local/bin/uninstall.sh "$REPO_URL/uninstall.sh"
