@@ -17,7 +17,7 @@ IZIN_IPS=$(curl -s "$IZIN_URL")
 MATCHING_LINE=$(echo "$IZIN_IPS" | grep -w "$SERVER_IP")
 
 if [ -z "$MATCHING_LINE" ]; then
-    echo "Akses ditolak. IP Anda ($SERVER_IP) tidak terdaftar."
+    echo -e "\033[1;31mAkses ditolak. IP Anda ($SERVER_IP) tidak terdaftar.\033[0m"
     exit 1
 fi
 
@@ -38,7 +38,7 @@ fi
 
 # Simpan informasi lisensi
 sudo mkdir -p /etc/zivpn
-echo "CLIENT_NAME=$CLIENT_NAME" > /etc/zivpn/license.conf
+echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
 echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
 echo "Lisensi valid untuk klien: $CLIENT_NAME, Kedaluwarsa: $EXPIRY_DATE"
 sleep 2
