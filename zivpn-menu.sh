@@ -61,20 +61,15 @@ load_theme() {
 # Load the theme at the start of the script
 load_theme
 
-display_license_info() {
-    local BORDER_COLOR='\033[38;5;42m'
-    local LABEL_COLOR='\033[38;5;82m'
-    local CLIENT_COLOR='\033[38;5;214m'
-    local VALUE_COLOR='\033[1;37m'
-    local NC='\033[0m'
+# This function is now designed to be called inside a subshell
+# that is piped to the theme engine. It should not contain colors.
+display_license_info_content() {
     local LICENSE_FILE="/etc/zivpn/license.conf"
 
     if [ -f "$LICENSE_FILE" ]; then
         source "$LICENSE_FILE" &> /dev/null
 
-        local title="Script License"
         local remaining_display
-
         if [[ "$EXPIRY_DATE" == "lifetime" ]]; then
             remaining_display="Lifetime"
         else
@@ -84,8 +79,7 @@ display_license_info() {
             else
                 local current_seconds=$(date +%s)
                 if [ "$current_seconds" -gt "$expiry_seconds" ]; then
-                    title="Script Expired"
-                    remaining_display="0 Days"
+                    remaining_display="Expired"
                 else
                     local remaining_seconds=$((expiry_seconds - current_seconds))
                     local remaining_days=$((remaining_seconds / 86400))
@@ -94,12 +88,12 @@ display_license_info() {
             fi
         fi
 
-        printf "${BORDER_COLOR} ┌─[🔲 ${VALUE_COLOR}%-16s${BORDER_COLOR} 🔲]─┐${NC}\n" "$title"
-        printf "${BORDER_COLOR} │ ${LABEL_COLOR}↘ Client : ${CLIENT_COLOR}%-25s ${BORDER_COLOR}│${NC}\n" "$CLIENT_NAME"
-        printf "${BORDER_COLOR} │ ${LABEL_COLOR}↘ Versi  : ${VALUE_COLOR}v5.3 LTS  ${BORDER_COLOR}| ${LABEL_COLOR}Expiry : ${VALUE_COLOR}%-10s ${BORDER_COLOR}│${NC}\n" "$remaining_display"
-        printf "${BORDER_COLOR} └──────────────────────────────────────────┘${NC}\n"
+        printf " License To : %-15s Expiry : %s\n" "$CLIENT_NAME" "$remaining_display"
+        printf " Build By   : @Dark_System2x        Partner: @wibuvpn\n"
+        echo "==========================================================="
     fi
 }
+
 
 # --- Global Server Info (fetch once) ---
 IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
@@ -941,8 +935,10 @@ show_menu() {
     echo "-----------------------------------------------------------"
     printf " [%02d] Exit\n" 0
     echo "==========================================================="
+    # Panggil fungsi lisensi di dalam subshell agar ikut tema
+    display_license_info_content
     ) | eval "$THEME_CMD"
-    display_license_info
+
     echo -n -e "${PROMPT_COLOR} -> Masukkan pilihan Anda:${NC} "
     read -r choice
 }
