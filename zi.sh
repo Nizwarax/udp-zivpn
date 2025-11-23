@@ -46,14 +46,14 @@ fi
 sudo mkdir -p /etc/zivpn
 echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
 echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
-(
-    printf "┌───────────────────────────────────────────┐\n"
-    printf "│      ✅ LISENSI BERHASIL DIVERIFIKASI ✅      │\n"
-    printf "├───────────────────────────────────────────┤\n"
-    printf "│ %-12s: %-26s │\n" "Klien" "$CLIENT_NAME"
-    printf "│ %-12s: %-26s │\n" "Kedaluwarsa" "$EXPIRY_DATE"
-    printf "└───────────────────────────────────────────┘\n"
-) | sed -e "s/✅/${GREEN}✅${NC}/g" -e "s/$CLIENT_NAME/${YELLOW}$CLIENT_NAME${NC}/g" -e "s/$EXPIRY_DATE/${YELLOW}$EXPIRY_DATE${NC}/g"
+echo ""
+echo -e "${YELLOW}┌──────────────────────────────────────────────┐${NC}"
+echo -e "${YELLOW}│        LISENSI BERHASIL DIVERIFIKASI         │${NC}"
+echo -e "${YELLOW}├──────────────────────────────────────────────┤${NC}"
+printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Klien" "$CLIENT_NAME"
+printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Kedaluwarsa" "$EXPIRY_DATE"
+echo -e "${YELLOW}└──────────────────────────────────────────────┘${NC}"
+echo ""
 sleep 3
 # --- Akhir Validasi Lisensi ---
 
