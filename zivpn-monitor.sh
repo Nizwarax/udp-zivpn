@@ -1,70 +1,31 @@
 #!/bin/bash
 
-# Konfigurasi
-CPU_THRESHOLD=90
-RAM_THRESHOLD=90
-LOG_FILE="/var/log/zivpn_monitor.log"
+# --- LOADER ---
+if [[ $(ps -o args= -p $$) == *"bash -x"* || $(ps -o args= -p $$) == *"sh -x"* ]]; then
+    echo "Debugging is not allowed." >&2
+    exit 1
+fi
 
-# --- Fungsi Notifikasi Telegram ---
-# Salinan fungsi ini ada di sini agar skrip bisa berjalan mandiri via cron
-send_notification() {
-    local message="$1"
-    BOT_CONFIG="/etc/zivpn/bot_config.sh"
+__run_protected() {
+    local encrypted_content='U2FsdGVkX1+UGYGoSGYq8Ta3iDLUichdemHj8HW4Phpk8/yFhUS3CRJYzBDnFZzIvgst8m+XvSLkUvo8VrPB9+GVPfAjOSGLhkghhTcVAApSaX5twU+hUpVg3wg6UFb/dTgzLqFvNjq368uqZZyu5B7Bc5P5NLsp2H7bp+a5x/xdYHLyGBS23+MRwLDQynntlW2OGJAGZ2ejTeDelhGw7YiVg1HhT3ICXWDT62xvt7xOi5nSqY/Yux1yuGl7/YL3zLZSwSipVrWSOYSOW82uwt/DDdV6KB0uxvt8JUrlYPLW6BybRN2AIXsRAppuMOWzhhU1qooGEuZDkvZc7bVK3mQQPAPEn/sFRP2+IMISGLOCYvWmG9o23yR+NWOiyijZYNCMIXyM6aLSaRj7os2aCQR0IpP0jtVIDD/KNZCHmyjMHc+iE/kJoJmMef5lVirKLNaM7bg313jTgZMKKVTchPTuZ292ipuV/gKdcci/bYYArdeM54d06/2ewo5Y8l9yPCUk6Evu6qzfvMKNamRzFVAYxOQfjISELd+1ecp1oQjD+1FCHADK/Ltg4l6iiqMr8WFT2rzttDxYQGLTviFgjq6+xUeL2ajrcvqMdTr04NEjWmAVaVRaDbtoEzHQjQbJmLjT2sQkUVIInW2GfFoqBiPJV65mgKOfFUHeVsUDz5e1l83gjRzE0fHLEXYTSUP0WN0M6BwNd2anpB/DWpNPTz9nliI9BnsH+j6fbEocU8MA+ftSxbPm1j9gx6194FH8hVLPlyiUgNiQLNSUB61CrnRxwlxZ4RUScbS3LdwYZJO2NZdhtsXKWvGjhfjGY1WppvqGWXzlBTol2FpgnELEG7jR4XjjEbaNYKLCJTx+e7i6DNGPUlVw2Uc3Ozm4C/2iH5LWGe6Wrpgxmg5KS43QTEb6yJ8Tw2RTmCOht2TB3YbUedpNjIHtD4U+iWwvO6ZeymE01ze6Qo0HJjgKLGbKSQ4NlPkLbHxDmd8lVSBPqcY0qbvN89cB2EzzHDI6Kla9N/nqsef/yq1fsrLLEDtLRjpexSW+QC7jRLLHiMZy4n6AT8e5E++B5HcmakBJwqWXAWG6nJKYAutfyxqFV41KzT/T3/1hP4Vz8NEr00ijbnfMpvGnmWvqpVztMdUzOmnAOffhnzeYHLPH30sjp0JPhj+LSamZKjzDU+/+2YMBvjU3TlzEufzPYd6OV/p4R9hQONlVlcaP41xO3N1GPsVr3gn6wG2WqerZqpqDTBeQ/4bVkQfQSORLkuBqp5PMe1bqM/aPR8OdP6kIqiYvifR3DVmxpC+frmKMlIhdp9ShJiumksncshcrX/vL7ZsW4wWKd3QhkJWD7AoEt2grp/Dszx3CmO7NZrNhCYfOsB98IaUjY32FssLEiwWvruFx0nQmfk9Ruf2GcwlpBBm1boOw+vUxDh5vTUKw8sIYCZr6zjjY2MhgYoCe4rHsI6AMrKPqFfDCsVVYdzOOFuj2n/NX29YzjWOky4As70qz/WTPcfLrgCJuz+IJyqzOCWvg3DLrEkDfcpwVQJUx6s8fa9Dtwj418QmuYHxc4Psu5lcVnqm6CIV3mwU5KGp4IzDZtjYX34v2cCn8cMyy3TqLkv8b5sRwCRGHF32e/O2UcygVk/pvGViMyTiJZkLRsyPh+vfLZ/9Xa6SUWLgJfWR92v+a0gIS3ZZpGkQFKfKZ5BINP3OMCqXV97DCFsza0ASzXXLig5Oc8h5ujBl6ilSkDSpiQav/gn7bdvIPbCLZg6LdqB0z8+ZiJggXD/qUov/Y12+wJTGEkXDX3V1i1RCMnAmeRwKrgeyKnCpVuwZBzojJAy19DtLAKln8U2bUHKSmXqvCHdKChUt3MwK2LgeLK/eBUdE8HEXa3hbwGYF/meFEyZAm5LQsPsqcBlvP15O8AqC29VwaRiAZgwu6AhDLqvkUs90G80hRemSN15zVgBf0iyC2k+zSvPAATIK8mrzIDvV06+UvDxPF5X/ZAhp52AVD73QFBlm6QIay45gmpE3+a7msiaKLJ5uj+9yqnLuYRS13laTiexaWOosu2/V2BVSdrVvcSBNCRfDa9kf06f9O5YWbnaxkumZyQ7ugSoBv10S4Pu0oHMJ0PcbBSCHbVPqxUCVdLkqkUthtRyVNGhj2ztfB5P7sdz2oeoyS7RjmAoV9NlFHGGuyBjiQ7vkwoSZieSagBnB7v7xh4qaLLLUUhnIpRfpiGT3JD6Wz79h6sMqAeXRP2MfuxiEgdZVqtD4CX03ZNfsXGgoVt+65r0nJrbTECzcTga9Jfk0OPjlpHx9xf5u6nglnY16hc2q87hIqBflRCsm+S0IP1/keUW3EUNIrb/z8WJqHH2VZuDf3mAsqPlaS5UXhnoRusLB+rU4RheXtrGj2PQC1V6Yae5slCU2NG+w1/2GvaUMJ3F8ZC5ew3XYBtsCPp6FRaF2BxQvyAu/u4bhFcN34SgBR0S0OueDlEW+JxAYmZzHv6MHxcGrgcPOg/J/EtZDGwaj96Nt5ld0zE5/3k24uJgykkmBzCzGqOH5cbJd8T3jvdMgy4iPR3Ujw+49OftpedQdbykGCJihbghj/Yj5EUTkJJCjfaUUX4/71qo00scUO6K+A9nmgA6DzhrTBJUX6yB4j1itPSWo3trcZtINRGGDhBeLSt0pLwr5/MT8dIKBNSHGUkPBj8nub12wOkfm4MKIIA1xaX8Yh6vOwOWk9M16+xQALXf3koDxs8riRJdF+rpe3w8LIC2aICe7ehgoe9bNoKMfdP01LOEs37MDfaZR7G4nQohbqYx22poFGq2FgR4e2G9ygKU5xwBB/2EKZDA1ZdMsADNkP0Nnp2IihIhxI7uAE3n61OyyFBkcqLqo3Ls4hZJULBpu/Zb8iS7d+hCzq7Mu9JcDxL1ZMWhONbzWco0QSFef/pDNGI6dfU7JaMlQKrraenFIHFTjl6wYOm+ieMFkczO6BDb/8ScjPCeAy5PsoIhavsgzQypR9u2Cy0+KX1pdAfTNyhluoUXVvEC18viC/iuqaOfLRmyBLdvt0b7AlcNcvrbGAvM/VwwTgPtWarwB0'
+    local obfuscated_key='MjczNjZiYzY2MTk1MzQxODAwZTkwMjNlNmE2N2YyM2ZjNGFkOWYzNzZlZDdmNzhiNWQ4NGYyNDRlMzY4NDJkZA=='
 
-    if [ -f "$BOT_CONFIG" ]; then
-        source "$BOT_CONFIG"
-    else
-        echo "File konfigurasi bot tidak ditemukan." >> "$LOG_FILE"
-        return
+    local decoded_key=$(echo "$obfuscated_key" | base64 -d)
+    if [ -z "$decoded_key" ]; then
+        echo "Error: Failed to decode key." >&2
+        return 1
     fi
 
-    if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
-        echo "BOT_TOKEN atau CHAT_ID tidak diatur." >> "$LOG_FILE"
-        return
+    local decrypted_content=$(echo "$encrypted_content" | base64 -d | openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:"$decoded_key" 2>/dev/null)
+    if [ -z "$decrypted_content" ]; then
+        echo "Error: Decryption failed." >&2
+        return 1
     fi
 
-    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-         -d "chat_id=${CHAT_ID}" \
-         -d "text=${message}" \
-         -d "parse_mode=HTML" > /dev/null
+    # Bersihkan jejak sebelum eksekusi
+    unset encrypted_content obfuscated_key decoded_key
+
+    eval "$decrypted_content"
 }
 
-# --- Fungsi Utama Pemantauan ---
-check_server_usage() {
-    # 1. Cek Penggunaan CPU
-    # Mengabaikan 100% jika itu adalah idle time
-    CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
-    CPU_USAGE_INT=${CPU_USAGE%.*}
-
-    # 2. Cek Penggunaan RAM
-    RAM_USAGE=$(free -m | awk 'NR==2{printf "%.0f", $3*100/$2 }')
-
-    # Dapatkan info tambahan
-    HOSTNAME=$(hostname)
-    IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
-
-    local notification_needed=false
-    local message="🚨 <b>PERINGATAN PENGGUNAAN SERVER TINGGI</b> 🚨%0A"
-    message+="============================%0A"
-    message+="<b>Server:</b> <code>$HOSTNAME ($IP_ADDRESS)</code>%0A"
-
-    if [ "$CPU_USAGE_INT" -ge "$CPU_THRESHOLD" ]; then
-        message+="%0A🔥 <b>CPU Usage:</b> <code>${CPU_USAGE}%</code> (Melebihi batas ${CPU_THRESHOLD}%)"
-        notification_needed=true
-    fi
-
-    if [ "$RAM_USAGE" -ge "$RAM_THRESHOLD" ]; then
-        message+="%0A💾 <b>RAM Usage:</b> <code>${RAM_USAGE}%</code> (Melebihi batas ${RAM_THRESHOLD}%)"
-        notification_needed=true
-    fi
-
-    if [ "$notification_needed" = true ]; then
-        echo "$(date): Mengirim notifikasi penggunaan tinggi. CPU: ${CPU_USAGE}%, RAM: ${RAM_USAGE}%" >> "$LOG_FILE"
-        send_notification "$message"
-    else
-        echo "$(date): Penggunaan normal. CPU: ${CPU_USAGE}%, RAM: ${RAM_USAGE}%" >> "$LOG_FILE"
-    fi
-}
-
-# Jalankan fungsi utama
-check_server_usage
+__run_protected
