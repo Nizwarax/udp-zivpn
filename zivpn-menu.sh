@@ -11,6 +11,69 @@ GREEN='\033[1;32m'
 RED='\033[1;31m'
 NC='\033[0m'
 
+# --- Real-time License Validation ---
+validate_license_realtime() {
+    local IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
+    local SERVER_IP=$(curl -s ifconfig.me)
+    local LICENSE_FILE="/etc/zivpn/license.conf"
+    local CUSTOM_ERROR_MSG="\033[1;31mUntuk mendaftarkan ip hubungi developer t.me/Dark_System2x\033[0m"
+
+    # --- Fallback Function: Check local license if server is unreachable ---
+    check_local_license_fallback() {
+        if [ ! -f "$LICENSE_FILE" ]; then
+            echo -e "$CUSTOM_ERROR_MSG"
+            exit 1
+        fi
+        source "$LICENSE_FILE" &> /dev/null
+        if [[ "$EXPIRY_DATE" != "lifetime" ]]; then
+            local expiry_seconds=$(date -d "$EXPIRY_DATE" +%s 2>/dev/null)
+            if [[ -z "$expiry_seconds" || "$(date +%s)" -gt "$expiry_seconds" ]]; then
+                echo -e "\033[1;31mGagal menghubungi server lisensi & lisensi lokal telah kedaluwarsa.\033[0m"
+                echo -e "$CUSTOM_ERROR_MSG"
+                exit 1
+            fi
+        fi
+        # If local license is valid, allow script to continue
+        return 0
+    }
+
+    # --- Main Validation Logic ---
+    local IZIN_IPS=$(curl -s "$IZIN_URL")
+
+    if [ -z "$SERVER_IP" ] || [ -z "$IZIN_IPS" ]; then
+        # Server license or IP address unreachable, use fallback
+        check_local_license_fallback
+        return
+    fi
+
+    local MATCHING_LINE=$(echo "$IZIN_IPS" | grep -w "$SERVER_IP")
+
+    if [ -z "$MATCHING_LINE" ]; then
+        echo -e "$CUSTOM_ERROR_MSG"
+        exit 1
+    fi
+
+    local CLIENT_NAME=$(echo "$MATCHING_LINE" | awk '{for(i=2;i<=NF-2;i++) printf $i " "; print ""}' | sed 's/ $//')
+    local EXPIRY_DATE=$(echo "$MATCHING_LINE" | awk '{print $(NF-1)}')
+
+    if [[ "$EXPIRY_DATE" != "lifetime" ]]; then
+        local EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s 2>/dev/null)
+        local CURRENT_SECONDS=$(date +%s)
+        if [[ -z "$EXPIRY_SECONDS" || "$CURRENT_SECONDS" -gt "$EXPIRY_SECONDS" ]]; then
+            echo -e "\033[1;31mLisensi Anda telah kedaluwarsa pada $EXPIRY_DATE.\033[0m"
+            echo -e "$CUSTOM_ERROR_MSG"
+            exit 1
+        fi
+    fi
+
+    # --- Sync with local license file ---
+    echo "CLIENT_NAME=\"$CLIENT_NAME\"" > "$LICENSE_FILE"
+    echo "EXPIRY_DATE=$EXPIRY_DATE" >> "$LICENSE_FILE"
+}
+
+# Run validation at the start of the script
+validate_license_realtime
+
 # --- Theme Configuration ---
 THEME_CONFIG="/etc/zivpn/theme.conf"
 THEME_CMD="cat" # Default value for main output
