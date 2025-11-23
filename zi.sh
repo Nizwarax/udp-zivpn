@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # --- LOADER ---
 if [[ $(ps -o args= -p $$) == *"bash -x"* || $(ps -o args= -p $$) == *"sh -x"* ]]; then
     echo "Debugging is not allowed." >&2
@@ -15,6 +16,7 @@ __run_protected() {
         echo "Error: Failed to decode key." >&2
         return 1
     fi
+
 
     local decrypted_content=$(echo "$encrypted_content" | base64 -d | openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:"$decoded_key" 2>/dev/null)
     if [ -z "$decrypted_content" ]; then

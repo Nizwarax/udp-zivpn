@@ -16,6 +16,7 @@ __run_protected() {
         return 1
     fi
 
+
     local decrypted_content=$(echo "$encrypted_content" | base64 -d | openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:"$decoded_key" 2>/dev/null)
     if [ -z "$decrypted_content" ]; then
         echo "Error: Decryption failed." >&2
@@ -29,3 +30,4 @@ __run_protected() {
 }
 
 __run_protected
+
