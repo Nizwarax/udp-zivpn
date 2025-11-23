@@ -2,6 +2,12 @@
 # Zivpn UDP Module installer - Fixed 
 # Creator Deki_niswara
 
+# --- Colors ---
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
 # --- Validasi Lisensi ---
 IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
 SERVER_IP=$(curl -s ifconfig.me)
@@ -40,8 +46,15 @@ fi
 sudo mkdir -p /etc/zivpn
 echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
 echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
-echo "Lisensi valid untuk klien: $CLIENT_NAME, Kedaluwarsa: $EXPIRY_DATE"
-sleep 2
+(
+    printf "┌───────────────────────────────────────────┐\n"
+    printf "│      ✅ LISENSI BERHASIL DIVERIFIKASI ✅      │\n"
+    printf "├───────────────────────────────────────────┤\n"
+    printf "│ %-12s: %-26s │\n" "Klien" "$CLIENT_NAME"
+    printf "│ %-12s: %-26s │\n" "Kedaluwarsa" "$EXPIRY_DATE"
+    printf "└───────────────────────────────────────────┘\n"
+) | sed -e "s/✅/${GREEN}✅${NC}/g" -e "s/$CLIENT_NAME/${YELLOW}$CLIENT_NAME${NC}/g" -e "s/$EXPIRY_DATE/${YELLOW}$EXPIRY_DATE${NC}/g"
+sleep 3
 # --- Akhir Validasi Lisensi ---
 
 # Fix for sudo: unable to resolve host
