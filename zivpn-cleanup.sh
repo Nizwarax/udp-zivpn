@@ -1,31 +1,73 @@
 #!/bin/bash
 
-# --- LOADER ---
-if [[ $(ps -o args= -p $$) == *"bash -x"* || $(ps -o args= -p $$) == *"sh -x"* ]]; then
-    echo "Debugging is not allowed." >&2
+# Skrip ini menghapus pengguna yang sudah kedaluwarsa dari database Zivpn dan mengirim notifikasi.
+
+USER_DB="/etc/zivpn/users.db.json"
+CONFIG_FILE="/etc/zivpn/config.json"
+BOT_CONFIG="/etc/zivpn/bot_config.sh"
+
+# Fungsi untuk mengirim notifikasi (salinan dari zivpn-menu.sh untuk portabilitas)
+send_notification() {
+    local message="$1"
+    if [ -f "$BOT_CONFIG" ]; then
+        source "$BOT_CONFIG"
+    else
+        return
+    fi
+    if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+        return
+    fi
+    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+         -d "chat_id=${CHAT_ID}" \
+         -d "text=${message}" \
+         -d "parse_mode=HTML" > /dev/null
+}
+
+# --- Mulai Proses Pembersihan ---
+
+# Periksa apakah file database pengguna ada
+if [ ! -f "$USER_DB" ]; then
+    # echo "Database pengguna tidak ditemukan. Keluar."
     exit 1
 fi
 
-__run_protected() {
-    local encrypted_content='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'
-    local obfuscated_key='MmIzNDJjYjJkYjEwYjJlMzdmZmNlYzBmY2JmNjUwZDlkYzE1NTU3MDUwMmFiZmM1ZGRlMjYzOWRmY2YxMDlhNg=='
+# Dapatkan waktu saat ini sebagai Unix timestamp
+current_time=$(date +%s)
 
-    local decoded_key=$(echo "$obfuscated_key" | base64 -d)
-    if [ -z "$decoded_key" ]; then
-        echo "Error: Failed to decode key." >&2
-        return 1
-    fi
+# 1. Dapatkan daftar pengguna yang kedaluwarsa untuk notifikasi
+expired_users=$(jq -c --argjson now "$current_time" '.[] | select(.expiry_timestamp <= $now)' "$USER_DB")
 
-    local decrypted_content=$(echo "$encrypted_content" | base64 -d | openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:"$decoded_key" 2>/dev/null)
-    if [ -z "$decrypted_content" ]; then
-        echo "Error: Decryption failed." >&2
-        return 1
-    fi
+if [ -z "$expired_users" ]; then
+    # echo "Tidak ada pengguna kedaluwarsa yang perlu dihapus."
+    exit 0
+fi
 
-    # Bersihkan jejak sebelum eksekusi
-    unset encrypted_content obfuscated_key decoded_key
+# 2. Hapus pengguna yang kedaluwarsa dari database
+updated_users_db=$(jq --argjson now "$current_time" '[.[] | select(.expiry_timestamp > $now)]' "$USER_DB")
+echo "$updated_users_db" > "$USER_DB.tmp" && mv "$USER_DB.tmp" "$USER_DB"
 
-    eval "$decrypted_content"
-}
+# 3. Kirim notifikasi untuk setiap pengguna yang dihapus
+IP_ADDRESS=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+echo "$expired_users" | while read -r user_json; do
+    username=$(jq -r '.username' <<< "$user_json")
 
-__run_protected
+    message="────────────────────%0A"
+    message+="    ☠️ <b>EXPIRED ACCOUNT DELETED</b> ☠️%0A"
+    message+="────────────────────%0A"
+    message+="<b>User</b>   : <code>${username}</code>%0A"
+    message+="<b>IP VPS</b> : <code>${IP_ADDRESS}</code>%0A"
+    message+="────────────────────%0A"
+
+    send_notification "$message"
+    echo "Pengguna kedaluwarsa '$username' dihapus dan notifikasi dikirim."
+done
+
+# 4. Sinkronkan konfigurasi dan restart layanan
+passwords_json=$(jq '[.[].password]' "$USER_DB")
+jq --argjson passwords "$passwords_json" '.auth.config = $passwords | .config = $passwords' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+
+sudo systemctl daemon-reload
+sudo systemctl restart zivpn.service > /dev/null 2>&1
+
+# echo "Proses pembersihan selesai."
+exit 0
