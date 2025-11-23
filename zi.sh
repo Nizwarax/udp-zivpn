@@ -2,6 +2,11 @@
 # Zivpn UDP Module installer - Fixed 
 # Creator Deki_niswara
 
+# --- Colors ---
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
 # --- Validasi Lisensi ---
 IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
 SERVER_IP=$(curl -s ifconfig.me)
@@ -40,7 +45,7 @@ fi
 sudo mkdir -p /etc/zivpn
 echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
 echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
-echo "Lisensi valid untuk klien: $CLIENT_NAME, Kedaluwarsa: $EXPIRY_DATE"
+echo -e "${GREEN}Lisensi valid untuk klien: ${YELLOW}$CLIENT_NAME${GREEN}, Kedaluwarsa: ${YELLOW}$EXPIRY_DATE${NC}"
 sleep 2
 # --- Akhir Validasi Lisensi ---
 

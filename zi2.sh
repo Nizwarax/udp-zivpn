@@ -1,6 +1,11 @@
 #!/bin/bash
-# Zivpn UDP Module installer - Fixed for x86_64 and password sync
+# Zivpn UDP Module installer - Fixed
 # Creator Deki_niswara
+
+# --- Colors ---
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
 # --- Validasi Lisensi ---
 IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
@@ -40,7 +45,7 @@ fi
 sudo mkdir -p /etc/zivpn
 echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
 echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
-echo "Lisensi valid untuk klien: $CLIENT_NAME, Kedaluwarsa: $EXPIRY_DATE"
+echo -e "${GREEN}Lisensi valid untuk klien: ${YELLOW}$CLIENT_NAME${GREEN}, Kedaluwarsa: ${YELLOW}$EXPIRY_DATE${NC}"
 sleep 2
 # --- Akhir Validasi Lisensi ---
 
@@ -96,6 +101,7 @@ if ! command -v lolcat &> /dev/null; then
     sudo apt-get install -y ruby-full
     sudo gem install lolcat
 fi
+
 
 # Stop service kalau ada
 sudo systemctl stop zivpn.service > /dev/null 2>&1
@@ -186,4 +192,4 @@ echo -e "${WHITE}Untuk membuka menu, ketik:${NC} ${YELLOW}zivpn${NC}"
 echo -e "${WHITE}Pesan selamat datang akan muncul setiap kali Anda login.${NC}\n"
 
 # Cleanup
-rm -f zi2.sh* zi-fixed.sh* > /dev/null 2>&1
+rm -f zi.sh* zi-fixed.sh* > /dev/null 2>&1
