@@ -40,7 +40,7 @@ validate_license_online() {
         echo -e "\033[1;37mSilakan hubungi developer untuk mendaftarkan IP Anda.\033[0m"
         echo -e "\033[1;37mKontak: \033[1;32mt.me/Dark_System2x\033[0m"
         echo -e "\033[1;31m===================================================\033[0m"
-        exit 0
+        exit 1
     fi
 
     local CLIENT_NAME
@@ -64,7 +64,7 @@ validate_license_online() {
             echo -e "\033[1;37mSilakan hubungi developer untuk perpanjangan.\033[0m"
             echo -e "\033[1;37mKontak: \033[1;32mt.me/Dark_System2x\033[0m"
             echo -e "\033[1;31m===================================================\033[0m"
-            exit 0
+            exit 1
         fi
     fi
 
