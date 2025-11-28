@@ -6,6 +6,53 @@ USER_DB="/etc/zivpn/users.db.json"
 CONFIG_FILE="/etc/zivpn/config.json"
 LICENSE_FILE="/etc/zivpn/license.conf"
 
+# --- Fungsi Validasi Lisensi Online (Real-time) ---
+validate_license_online() {
+    local API_URL="http://zivpn.nizwara.biz.id/check_license.php"
+    local SERVER_IP
+    SERVER_IP=$(curl -s ifconfig.me)
+    if [ -z "$SERVER_IP" ]; then
+        SERVER_IP=$(hostname -I | awk '{print $1}')
+    fi
+
+    if [ -z "$SERVER_IP" ]; then
+        echo -e "\033[1;31mGagal mendapatkan IP server. Silakan periksa koneksi internet Anda.\033[0m"
+        exit 1
+    fi
+
+    # Kirim permintaan verifikasi ke API
+    local API_RESPONSE
+    API_RESPONSE=$(curl -s -X POST "$API_URL" --data-urlencode "ip=$SERVER_IP")
+    local RESPONSE_STATUS
+    RESPONSE_STATUS=$(echo "$API_RESPONSE" | cut -d'|' -f1)
+
+    if [ "$RESPONSE_STATUS" != "SUCCESS" ]; then
+        clear
+        echo -e "\033[1;31m========================================================\033[0m"
+        echo -e "\033[1;31m      LISENSI TIDAK AKTIF ATAU TELAH KEDALUWARSA      \033[0m"
+        echo -e "\033[1;31m========================================================\033[0m"
+        echo -e "\033[1;37mIP Anda: \033[1;33m$SERVER_IP\033[0m"
+        echo -e "\033[1;37mSilakan hubungi developer untuk memeriksa status lisensi Anda.\033[0m"
+        echo -e "\033[1;37mKontak: \033[1;32mt.me/Dark_System2x\033[0m"
+        echo -e "\033[1;31m========================================================\033[0m"
+        exit 1
+    else
+        # Jika sukses, sinkronkan info terbaru ke file lokal
+        local RESPONSE_MESSAGE
+        RESPONSE_MESSAGE=$(echo "$API_RESPONSE" | cut -d'|' -f2-)
+        local CLIENT_NAME
+        CLIENT_NAME=$(echo "$RESPONSE_MESSAGE" | cut -d'|' -f1)
+        local EXPIRY_DATE
+        EXPIRY_DATE=$(echo "$RESPONSE_MESSAGE" | cut -d'|' -f2)
+
+        echo "CLIENT_NAME=\"$CLIENT_NAME\"" > "$LICENSE_FILE"
+        echo "EXPIRY_DATE=$EXPIRY_DATE" >> "$LICENSE_FILE"
+    fi
+}
+
+# --- Jalankan Validasi Lisensi Saat Startup ---
+validate_license_online
+
 # --- Colors ---
 BLUE='\033[1;34m'
 WHITE='\033[1;37m'
@@ -91,8 +138,8 @@ display_license_info_content() {
             fi
         fi
 
-        printf " License To : %-17s Expiry : %s\n" "$CLIENT_NAME" "$remaining_display"
-        printf " Build By   : @Dark_System2x    Partner: @wibuvpn\n"
+        printf " License To : %-15s Expiry : %s\n" "$CLIENT_NAME" "$remaining_display"
+        printf " Build By   : @Dark_System2x        Partner: @wibuvpn\n"
         echo "==========================================================="
     fi
 }
