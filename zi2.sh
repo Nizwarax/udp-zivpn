@@ -6,55 +6,69 @@
 GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 WHITE='\033[1;37m'
+RED='\033[1;31m'
 NC='\033[0m'
 
-# --- Validasi Lisensi ---
-IZIN_URL="http://zivpn.nizwara.biz.id/izin_ips.txt"
+# --- Validasi Lisensi Baru dengan Kunci Aktivasi ---
+API_URL="http://zivpn.nizwara.biz.id/claim_key.php"
+
+clear
+echo ""
+echo -e "${YELLOW}┌──────────────────────────────────────────┐${NC}"
+echo -e "${YELLOW}│   Silakan masukkan Kunci Aktivasi Anda   │${NC}"
+echo -e "${YELLOW}└──────────────────────────────────────────┘${NC}"
+echo -n -e "${WHITE}└──> ${NC}"
+read AUTH_KEY
+
+if [ -z "$AUTH_KEY" ]; then
+    echo -e "\n${RED}Kunci Aktivasi tidak boleh kosong. Instalasi dibatalkan.${NC}"
+    exit 1
+fi
+
+# Dapatkan IP server
 SERVER_IP=$(curl -s ifconfig.me)
-
-# Periksa apakah pengambilan IP berhasil
 if [ -z "$SERVER_IP" ]; then
-    echo "Gagal mendapatkan IP server. Silakan periksa koneksi internet Anda."
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+fi
+
+if [ -z "$SERVER_IP" ]; then
+    echo -e "\n${RED}Gagal mendapatkan IP server. Periksa koneksi internet Anda.${NC}"
     exit 1
 fi
 
-# Unduh daftar IP yang diizinkan
-IZIN_IPS=$(curl -s "$IZIN_URL")
-MATCHING_LINE=$(echo "$IZIN_IPS" | grep -w "$SERVER_IP")
+echo -e "\n${WHITE}Mengecek Kunci Aktivasi...${NC}"
 
-if [ -z "$MATCHING_LINE" ]; then
-    echo -e "\033[1;31mAkses ditolak. IP Anda ($SERVER_IP) tidak terdaftar.\033[0m"
+# Kirim permintaan ke API
+API_RESPONSE=$(curl -s -X POST "$API_URL" --data-urlencode "key=$AUTH_KEY" --data-urlencode "ip=$SERVER_IP")
+
+# Proses respons dari API
+RESPONSE_STATUS=$(echo "$API_RESPONSE" | cut -d'|' -f1)
+RESPONSE_MESSAGE=$(echo "$API_RESPONSE" | cut -d'|' -f2-)
+
+if [ "$RESPONSE_STATUS" == "SUCCESS" ]; then
+    CLIENT_NAME=$(echo "$RESPONSE_MESSAGE" | cut -d'|' -f1)
+    EXPIRY_DATE=$(echo "$RESPONSE_MESSAGE" | cut -d'|' -f2)
+
+    # Simpan informasi lisensi
+    sudo mkdir -p /etc/zivpn
+    echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
+    echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
+
+    echo ""
+    echo -e "${YELLOW}┌──────────────────────────────────────────────┐${NC}"
+    echo -e "${YELLOW}│         LISENSI BERHASIL DIAKTIVASI          │${NC}"
+    echo -e "${YELLOW}├──────────────────────────────────────────────┤${NC}"
+    printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Klien" "$CLIENT_NAME"
+    printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Kedaluwarsa" "$EXPIRY_DATE"
+    echo -e "${YELLOW}└──────────────────────────────────────────────┘${NC}"
+    echo ""
+    sleep 3
+else
+    ERROR_REASON=$(echo "$RESPONSE_MESSAGE" | cut -d'|' -f1)
+    echo -e "\n${RED}Aktivasi Gagal! ${NC}$ERROR_REASON.${NC}"
+    echo -e "${RED}Instalasi dibatalkan. Silakan hubungi developer.${NC}"
     exit 1
 fi
-
-# Ekstrak informasi dari baris yang cocok
-CLIENT_NAME=$(echo "$MATCHING_LINE" | awk '{for(i=2;i<=NF-2;i++) printf $i " "; print ""}' | sed 's/ $//')
-EXPIRY_DATE=$(echo "$MATCHING_LINE" | awk '{print $(NF-1)}')
-
-# Validasi tanggal kedaluwarsa
-if [[ "$EXPIRY_DATE" != "lifetime" ]]; then
-    EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s)
-    CURRENT_SECONDS=$(date +%s)
-
-    if [ "$CURRENT_SECONDS" -gt "$EXPIRY_SECONDS" ]; then
-        echo "Lisensi untuk klien '$CLIENT_NAME' telah kedaluwarsa pada $EXPIRY_DATE."
-        exit 1
-    fi
-fi
-
-# Simpan informasi lisensi
-sudo mkdir -p /etc/zivpn
-echo "CLIENT_NAME=\"$CLIENT_NAME\"" > /etc/zivpn/license.conf
-echo "EXPIRY_DATE=$EXPIRY_DATE" >> /etc/zivpn/license.conf
-echo ""
-echo -e "${YELLOW}┌──────────────────────────────────────────────┐${NC}"
-echo -e "${YELLOW}│        LISENSI BERHASIL DIVERIFIKASI         │${NC}"
-echo -e "${YELLOW}├──────────────────────────────────────────────┤${NC}"
-printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Klien" "$CLIENT_NAME"
-printf "${YELLOW}│ ${WHITE}%-12s: ${YELLOW}%-29s ${YELLOW}│${NC}\n" "Kedaluwarsa" "$EXPIRY_DATE"
-echo -e "${YELLOW}└──────────────────────────────────────────────┘${NC}"
-echo ""
-sleep 3
 # --- Akhir Validasi Lisensi ---
 
 # Fix for sudo: unable to resolve host
